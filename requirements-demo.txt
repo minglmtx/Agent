@@ -1,0 +1,6 @@
+# Tested application stack; GPU serving is optional and installed separately.
+-e ./python
+anthropic==0.125.0
+openai==1.109.1
+rich==15.0.0
+transformers==4.57.6

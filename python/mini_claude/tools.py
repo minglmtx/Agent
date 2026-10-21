@@ -4,16 +4,19 @@ grep_search, run_shell, skill, enter/exit_plan_mode, agent."""
 
 from __future__ import annotations
 
+import asyncio
 import fnmatch
 import json
 import os
 import re
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 from .memory import get_memory_dir
 from .frontmatter import parse_frontmatter
+from .command_runner import OutputCallback, run_command
 
 # ─── Permission modes ──────────────────────────────────────
 
@@ -421,25 +424,22 @@ def _grep_python(pattern: str, directory: str, include: str | None) -> str:
     return output
 
 
-def _run_shell(inp: dict) -> str:
+_shell_output_callback: OutputCallback | None = None
+
+
+def set_shell_output_callback(callback: OutputCallback | None) -> None:
+    """Set live output sink; invoked from the command worker thread."""
+    global _shell_output_callback
+    _shell_output_callback = callback
+
+
+def _run_shell(inp: dict, cancel_event: threading.Event | None = None) -> str:
     try:
-        timeout_ms = inp.get("timeout", 30000)
-        timeout_s = timeout_ms / 1000
-        result = subprocess.run(
-            inp["command"],
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=timeout_s,
+        result = run_command(
+            inp["command"], timeout_s=float(inp.get("timeout", 30000)) / 1000,
+            on_output=_shell_output_callback, cancel_event=cancel_event,
         )
-        output = result.stdout or ""
-        if result.returncode != 0:
-            stderr = f"\nStderr: {result.stderr}" if result.stderr else ""
-            stdout = f"\nStdout: {result.stdout}" if result.stdout else ""
-            return f"Command failed (exit code {result.returncode}){stdout}{stderr}"
-        return output or "(no output)"
-    except subprocess.TimeoutExpired:
-        return f"Command timed out after {inp.get('timeout', 30000)}ms"
+        return result.render()
     except Exception as e:
         return f"Error: {e}"
 
@@ -722,7 +722,18 @@ async def execute_tool(
     handler = handlers.get(name)
     if not handler:
         return f"Unknown tool: {name}"
-    result = handler(inp)
+    if name == "run_shell":
+        cancel_event = threading.Event()
+        worker = asyncio.create_task(asyncio.to_thread(handler, inp, cancel_event))
+        try:
+            result = await asyncio.shield(worker)
+        except asyncio.CancelledError:
+            cancel_event.set()
+            # Wait for process-group cleanup before exposing cancellation upstream.
+            await asyncio.shield(worker)
+            raise
+    else:
+        result = handler(inp)
 
     # Update mtime after successful write/edit
     if name in ("write_file", "edit_file") and read_file_state is not None and not result.startswith("Error"):

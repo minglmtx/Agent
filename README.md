@@ -1,318 +1,101 @@
-<div align="center">
+# Python Coding Agent：执行可靠性与上下文管理 Demo
 
-# Claude Code From Scratch
+基于 `claude-code-from-scratch` 的 **Python 实现**复现并二次开发，使用本地 Qwen3-8B 完成模型决策、工具调用、文件编辑和测试反馈循环。改造重点是工具执行恢复、Shell 生命周期和结构化上下文摘要。
 
-**一步步，从零手写一个 Claude Code**
+这是小型工程演示，不是 Claude Code 官方实现。上游已有 Agent Loop、MCP、Skills、多 Agent 等模块；本次没有把这些上游功能算作个人新增贡献，也没有验证全部上游功能。
 
-[![GitHub stars](https://img.shields.io/github/stars/Windy3f3f3f3f/claude-code-from-scratch?style=flat-square&logo=github)](https://github.com/Windy3f3f3f3f/claude-code-from-scratch)
-[![GitHub forks](https://img.shields.io/github/forks/Windy3f3f3f3f/claude-code-from-scratch?style=flat-square&logo=github)](https://github.com/Windy3f3f3f3f/claude-code-from-scratch/fork)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](#)
-[![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](#)
-[![Lines of Code](https://img.shields.io/badge/~5000_lines-minimal-green?style=flat-square)](#)
+## 我们新增了什么
 
-<br/>
+| 改造 | 解决的问题 | 实现 |
+| --- | --- | --- |
+| 原子会话保存与执行日志 | 中断后会话损坏、工具是否执行不明确 | 临时文件 + fsync + 原子替换；调用 ID、参数摘要、开始/完成/未知状态；同会话文件锁 |
+| 可取消的命令运行器 | 等命令结束才看到输出、超时丢日志、后台子进程残留 | 增量读取 stdout/stderr、超时与取消、TERM→KILL、有限输出与日志 |
+| 结构化上下文摘要 | 摘要漏约束、混淆已做和待做、切断工具调用配对 | 固定 JSON 字段、保留近期完整交互、格式失败回退、历史归档 |
+| 小规模可复查评估 | 模型说完成不等于功能正确 | 独立验收、隔离工作目录、停止原因与业务结果分开记录 |
 
-[**📘 在线阅读教程 →**](https://windy3f3f3f3f.github.io/claude-code-from-scratch/)
-&nbsp;&nbsp;|&nbsp;&nbsp;
-[📘 Read Tutorial (English) →](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/en/)
-&nbsp;&nbsp;|&nbsp;&nbsp;
-[English](./README_EN.md)
+## 快速开始：CPU 验证，不需要模型
 
-<br/>
-
-> 📖 **想深入了解原理？** 姊妹项目 **[How Claude Code Works](https://github.com/Windy3f3f3f3f/how-claude-code-works)** — 12 篇专题，33 万字，从源码级别深度解析 Claude Code 架构
-
-</div>
-
----
-
-> ⚖️ **声明 / Disclaimer**：这是一个从零手写 Claude Code 的学习项目，照着 Claude Code 的公开可观察行为和通用 Agent 写法来做，**不保证**和 Claude Code 真实内部实现一致。"Claude Code" 是 Anthropic 的商标，本项目和 Anthropic 没有关联。
-
-**Claude Code 有几十万行代码，读不动？**
-
-本项目用 **约 5000 行代码**（TypeScript 和 Python 两个版本分别写），从零手写 Claude Code 的核心：Agent Loop、13 个工具（含并行执行 + 流式早期启动）、4 层上下文压缩、语义记忆召回、技能系统、多 Agent、MCP 集成。参照的是 Claude Code 的公开可观察行为，每一步都对着它讲清差异在哪。
-
-这不是 demo，是一份**分步教程**——13 章内容，跟着动手写几千行代码，从零理解一个 Coding Agent 的工作原理。而且每个代码章都能一条命令跑起来、不用 API key（见下方「每章代码都能跑」一节）。读完你就理解了 coding agent 的核心运作机制，无需啃那几十万行代码。
-
-<div align="center">
-  <video src="https://github.com/user-attachments/assets/4f6597e2-6ea3-45ae-8a6b-77662c4e9540" width="100%" autoplay loop muted playsinline></video>
-</div>
-
-## 📖 分步教程
-
-13 章内容，分两个阶段——先构建一个可用的 Coding Agent，再逐步添加进阶能力。每章都贴能跑的真实代码 + 与 Claude Code 的架构对照：
-
-| 章节 | 内容 | 架构对照视角 |
-|------|------|------------|
-| **Phase 1: 构建一个可用的 Coding Agent** | | |
-| [1. Agent Loop](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/01-agent-loop) | 核心循环：调用 LLM → 执行工具 → 重复 | `agent.ts` ↔ `query.ts` |
-| [2. 工具系统](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/02-tools) | 13 个工具 + mtime 防护 + 延迟加载 | `tools.ts` ↔ `Tool.ts` + 66 工具 |
-| [3. System Prompt](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/03-system-prompt) | 提示词工程 + @include 语法 | `prompt.ts` ↔ `prompts.ts` |
-| [4. CLI 与会话](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/04-cli-session) | REPL、Ctrl+C、会话持久化 | `cli.ts` ↔ `cli.tsx` |
-| [5. 流式输出](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/05-streaming) | 双后端 + 流式工具执行 + 并行执行 | `agent.ts` ↔ `api/claude.ts` |
-| [6. 权限与安全](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/06-permissions) | 5 模式 + 声明式规则 + 危险检测 | `tools.ts` ↔ `permissions/` (52KB) |
-| [7. 上下文管理](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/07-context) | 4 层压缩 + 大结果持久化 | `agent.ts` ↔ `compact/` |
-| **Phase 2: 进阶能力** | | |
-| [8. 记忆系统](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/08-memory) | 4 类型记忆 + 语义召回 + 异步预取 | `memory.ts` ↔ `memory.ts` |
-| [9. 技能系统](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/09-skills) | 技能发现 + inline/fork 双模式 | `skills.ts` ↔ `SkillTool/` |
-| [10. Plan Mode](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/10-plan-mode) | 只读规划 + 4 选项审批工作流 | `agent.ts` ↔ `EnterPlanMode` |
-| [11. 多 Agent](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/11-multi-agent) | Sub-Agent fork-return 多 Agent 架构 | `subagent.ts` ↔ `AgentTool/` |
-| [12. MCP 集成](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/12-mcp) | JSON-RPC over stdio 连接外部工具 | `mcp.ts` ↔ `mcpClient.ts` |
-| [13. 架构对比](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/13-whats-next) | 完整对比 + 扩展方向 | 全局 |
-| [14. 功能测试](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/14-testing) | 22 项手动测试覆盖全部功能 | `test/` |
-
-## ▶ 每章代码都能跑（无需 API key）
-
-读代码最怕读不懂又跑不起来，改一行也不知道对不对。所以每个代码章都配了一份能单独跑的最小实现：一条命令、不用 API key，就能看它真的转起来。
+Linux/POSIX、Python 3.11+。Shell 清理与文件锁使用 POSIX 接口，Windows 原生运行不在本次验证范围内。
 
 ```bash
-node steps/run.mjs --list     # 列出所有能跑的章节
-node steps/run.mjs 7          # 跑第 7 章：对话变长了，它把旧消息压成摘要
-node steps/run.mjs 7 --diff   # 只看这一章比上一章多写的那几行
-node steps/run.mjs 7 --py     # 换成 Python 版
+git clone --branch feat/python-coding-agent-reliability-demo \
+  https://github.com/minglmtx/Agent.git
+cd Agent
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-demo.txt
+source scripts/local-env.sh
+"$DEMO_PYTHON" -m unittest discover -s python/tests -p 'test_*.py' -v
+"$DEMO_PYTHON" scripts/run_demo_tasks.py --verify-fixtures
 ```
 
-看到的输出是真跑出来的（本地 mock 模型驱动，不联网），`--diff` 标出的正是这一章新增的代码。想拿自己的 prompt 连真模型试，加 `--live` 就行。每章的这段代码、文档里贴的代码块、跑出来的那段输出，全从同一份源码生成——不会出现"文档说的和代码对不上"。
+CPU 检查使用模拟模型、临时文件和短命令，无需 API Key 或 GPU。六道任务的初始代码均不能通过对应验收，参考实现均通过。
 
-## 🚀 快速开始
+## 本地 Qwen3-8B
 
-**TypeScript 版**
+需要 NVIDIA GPU、兼容的驱动/PyTorch/vLLM，以及提前下载的模型权重。本次 GPU 实测使用 A100；环境版本见 [dependencies.json](reports/dependencies.json)。版本记录不代表在任意 GPU/驱动上均可直接安装。
 
 ```bash
-git clone https://github.com/Windy3f3f3f3f/claude-code-from-scratch.git
-cd claude-code-from-scratch
-npm install && npm run build
+# 在获批的 GPU 资源内安装/启动；不要在集群登录节点启动模型。
+python -m pip install 'vllm==0.10.2'
+export DEMO_MODEL_PATH=/absolute/path/to/Qwen3-8B
+export DEMO_STORAGE=/absolute/path/to/demo-storage
+bash scripts/serve-qwen.sh
 ```
 
-**Python 版**（需要 Python 3.11+，[详细说明](./python/README.md)）
+另一个终端使用同一配置，在可丢弃的练习目录中运行：
 
 ```bash
-cd python
-pip install -e .
-mini-claude-py          # 命令行入口（避免与 TS 版 mini-claude 冲突）
-python -m mini_claude   # 或用 python -m 方式运行
+export DEMO_MODEL_PATH=/absolute/path/to/Qwen3-8B
+export DEMO_STORAGE=/absolute/path/to/demo-storage
+cd /path/to/disposable-workspace
+bash /path/to/Agent/scripts/run-local.sh --accept-edits \
+  '读取项目，修复问题并运行测试'
 ```
 
-### 配置 API
+本地服务只监听 `127.0.0.1:8020`；无需 OpenRouter token。启动配置禁用 thinking，上下文 16,384 tokens，输出上限 2,048，最多两个并发请求。模型会真实执行工具，练习目录不是安全沙箱。
 
-支持两种后端，通过环境变量自动识别：（支持自定义base url）
+集群配置、恢复、排障和完整参数见 [运行手册](docs/demo/RUNBOOK.md)。
 
-**方式一：Anthropic 格式（推荐）**
+## 实际验证结果
 
-```bash
-export ANTHROPIC_API_KEY="sk-ant-xxx"
-# 可选：使用代理
-export ANTHROPIC_BASE_URL="https://aihubmix.com"
+| 项目 | 结果 |
+| --- | --- |
+| CPU 检查 | 42 项通过（包含上游测试，不是 42 道编码题） |
+| 开发题，作业 4624227 | 1/3 通过；A100 作业总耗时 3 分 34 秒 |
+| 保留题，作业 4624477 | 0/3 通过；作业总耗时 2 分 52 秒，含摘要检查 |
+| 结构化摘要 | 两例 JSON 格式通过；一例将失败测试写为 attempted，错误内容仍保留 |
+| 付费 API | 0 次；GPU 仍消耗集群资源 |
+
+模型失败包括漏实现 CLI 参数、重复提交匹配不到的编辑、生成错误代码，以及只说要修改却不再执行。本项目**没有证明编码成功率提升**。两例摘要中结构化输出合计 354 tokens，原版段落 200 tokens，**没有证明降低 Token 消耗**。
+
+详情：[评估方法与结果](docs/demo/EVALUATION.md) · [实测报告](reports/RESULTS.zh-CN.md) · [可移植证据摘要](reports/evaluation-summary.json)
+
+## 技术文档与教程
+
+建议按顺序阅读：
+
+1. [教程导航与上游关系](docs/demo/TUTORIALS.md)：两个参考项目怎么读，本项目新增内容在哪里。
+2. [架构与关键设计](docs/demo/ARCHITECTURE.md)：主循环、执行状态、取消、压缩和设计边界。
+3. [运行手册](docs/demo/RUNBOOK.md)：环境、Slurm、恢复命令、产物与排错。
+4. [演示指南](docs/demo/DEMO.md)：几分钟展示工程能力，无需扩大评测集。
+5. [评估说明](docs/demo/EVALUATION.md)：任务定义、验收口径、实际结果和限制。
+
+保留了第一个项目的 [原始 README](README-UPSTREAM.md)、[中文教程](docs/00-introduction.md)、[英文教程](en/docs/00-introduction.md) 和逐章 `steps/`。原始教程涉及 TypeScript 的部分仍属于上游材料，本分支的改造仅在 Python。第二个项目通过 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) 链接阅读，没有复制其完整实现。
+
+## 目录
+
+```text
+python/mini_claude/    Python Agent 与本次改造
+python/tests/          CPU 回归与故障注入
+python/demo_tasks.py   六道自建任务与独立验收器
+scripts/               本地模型、任务与摘要比较入口
+cluster/               Slurm GPU 作业入口
+docs/demo/             本分支技术文档
+docs/、en/、steps/      保留的上游教程
+reports/               实测摘要、环境与已知限制
 ```
 
-**方式二：OpenAI 兼容格式**
+## 来源与许可证
 
-```bash
-export OPENAI_API_KEY="sk-xxx"
-export OPENAI_BASE_URL="https://api.openai.com/v1"
-```
-
-默认模型为 `claude-opus-4-6`，可通过环境变量或命令行参数自定义：
-
-```bash
-export MINI_CLAUDE_MODEL="claude-sonnet-4-6"    # 环境变量方式
-npm start -- --model gpt-4o                      # 命令行方式（优先级更高）
-```
-
-### 运行
-
-**TypeScript 版**
-
-```bash
-npm start                    # 交互式 REPL 模式（推荐）
-npm start -- --resume        # 恢复上次会话继续对话
-npm start -- --yolo          # 跳过安全确认（危险命令自动执行）
-npm start -- --plan          # Plan 模式：只分析不修改
-npm start -- --accept-edits  # 自动批准文件编辑
-npm start -- --dont-ask      # CI 模式：需确认的操作自动拒绝
-npm start -- --max-cost 0.50 # 费用限制（美元）
-npm start -- --max-turns 20  # 轮次限制
-```
-
-**Python 版**
-
-```bash
-mini-claude-py               # 交互式 REPL 模式（推荐）
-mini-claude-py --resume      # 恢复上次会话继续对话
-mini-claude-py --yolo        # 跳过安全确认
-mini-claude-py --plan        # Plan 模式：只分析不修改
-mini-claude-py --accept-edits # 自动批准文件编辑
-mini-claude-py --dont-ask    # CI 模式：需确认的操作自动拒绝
-mini-claude-py --max-cost 0.50 # 费用限制（美元）
-mini-claude-py --max-turns 20  # 轮次限制
-```
-
-全局安装后可在任意目录使用：
-
-**TypeScript 版**
-
-```bash
-npm link                     # 全局安装
-cd ~/your-project
-mini-claude                  # 直接启动
-```
-
-**Python 版**
-
-```bash
-cd python
-pip install -e .             # 全局安装（editable 模式）
-cd ~/your-project
-mini-claude-py               # 直接启动
-```
-
-### REPL 命令
-
-| 命令 | 功能 |
-|------|------|
-| `/clear` | 清空对话历史 |
-| `/cost` | 显示累计 token 用量和费用估算 |
-| `/compact` | 手动触发对话压缩 |
-| `/memory` | 列出所有已保存的记忆 |
-| `/skills` | 列出可用的技能 |
-| `/<skill>` | 调用已注册的技能（如 `/commit`） |
-
-> 详见 [CLI 与会话](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/04-cli-session) 和 [功能测试](https://windy3f3f3f3f.github.io/claude-code-from-scratch/#/docs/14-testing)
-
-## ⚖️ 与 Claude Code 的对比
-
-| 维度 | Claude Code | Mini Claude Code |
-|------|------------|-----------------|
-| 定位 | 生产级编程智能体 | 学习 / 最小可用实现 |
-| 工具数量 | 66+ 内置工具 | 13 个工具（6 核心 + web_fetch + tool_search + skill + agent + plan mode） |
-| 工具执行 | 并发 + streaming 早期启动 | 并行执行 + streaming 早期启动 |
-| 上下文管理 | 4 级压缩流水线 | 4 层压缩 + 大结果持久化（>30KB） |
-| 权限系统 | 7 层 + AST 分析 | 5 种模式 + 声明式规则 + 正则检测 |
-| 编辑验证 | 14 步流水线 | 引号容错 + 唯一性 + mtime 防护 + diff 输出 |
-| 记忆系统 | 4 类型 + 语义召回 | 4 类型 + 语义召回 + 异步预取 |
-| 技能系统 | 6 源 + inline/fork | 2 源 + inline/fork |
-| 多 Agent | Sub-Agent + Coordinator + Swarm | Sub-Agent（3 内置 + 自定义 Agent） |
-| MCP 集成 | mcpClient.ts + 动态工具发现 | McpManager + JSON-RPC over stdio |
-| 预算控制 | USD/轮次/abort 三维 | USD + 轮次限制 |
-| 代码量 | 50 万+ 行 | ~5500 行（TS）/ ~5000 行（Python） |
-
-## ⚡ 核心能力
-
-- **Agent 循环**：自动调用工具、处理结果、持续迭代，直到任务完成
-- **13 个工具**：读写编辑文件（mtime 防护）、搜索、Shell、WebFetch、ToolSearch（延迟加载）、技能、子 Agent、Plan Mode
-- **流式输出**：逐字实时显示，Anthropic + OpenAI 双后端，streaming 工具早期执行
-- **并行工具执行**：只读工具（read_file、grep_search 等）自动并发，2-3x 加速
-- **4 层上下文压缩**：budget 截断 → stale snip → microcompact → auto-compact + 大结果持久化（>30KB 写磁盘）
-- **权限系统**：5 种模式 + `.claude/settings.json` 声明式 allow/deny 规则 + 16 个危险命令正则
-- **记忆系统**：4 类型记忆 + 语义召回（sideQuery 调模型选择相关记忆）+ 异步预取
-- **技能系统**：`.claude/skills/` 目录加载，支持 inline 注入和 fork 子 Agent 两种执行模式
-- **多 Agent**：Sub-Agent fork-return 模式（3 内置类型 + `.claude/agents/` 自定义类型）
-- **MCP 集成**：JSON-RPC over stdio 连接外部工具服务器，动态工具发现与调用转发
-- **System Prompt**：@include 语法递归引入、.claude/rules/ 自动加载、模板变量替换
-- **Extended Thinking**：支持 Anthropic 扩展思考（`--thinking`），adaptive/enabled/disabled 三模式
-- **预算控制**：`--max-cost` 费用限制 + `--max-turns` 轮次限制，超限自动停止
-- **会话持久化**：自动保存对话，`--resume` 恢复上次会话
-- **跨平台**：Windows / macOS / Linux，自动检测 shell（PowerShell / bash / zsh）
-- **错误恢复**：API 限流/过载时指数退避 + 随机抖动重试（最多 3 次），Ctrl+C 优雅中断
-
-## 📁 项目结构
-
-```
-src/                # TypeScript 版
-├── agent.ts        # Agent 循环：流式、并行执行、4 层压缩、预算   (2169 行)
-├── tools.ts        # 工具：13 工具 + mtime 防护 + 延迟加载       (884 行)
-├── autonomy.ts     # 自治：/goal 评估器 + /loop + Auto Mode 分类器 (464 行)
-├── cli.ts          # CLI 入口：参数解析、REPL、预算 flags         (416 行)
-├── memory.ts       # 记忆系统：4 类型 + 语义召回 + 异步预取       (392 行)
-├── mcp.ts          # MCP 客户端：JSON-RPC over stdio             (277 行)
-├── prompt.ts       # System Prompt：@include + 模板 + 注入       (253 行)
-├── ui.ts           # 终端输出：彩色显示、格式化、子 Agent 显示    (215 行)
-├── subagent.ts     # 子 Agent：3 内置 + 自定义 Agent 发现         (199 行)
-├── skills.ts       # 技能系统：目录发现 + inline/fork 双模式      (175 行)
-├── session.ts      # 会话持久化：保存/恢复/列表                   (63 行)
-├── frontmatter.ts  # 共享 YAML frontmatter 解析器                (41 行)
-                                                    总计: ~5500 行
-
-python/             # Python 版（功能一致）
-├── mini_claude/
-│   ├── agent.py, tools.py, autonomy.py, __main__.py, ui.py,
-│   ├── prompt.py, session.py, memory.py, skills.py, subagent.py,
-│   ├── mcp_client.py, frontmatter.py
-│   └── system_prompt.md
-└── pyproject.toml                                  总计: ~5000 行
-
-steps/              # 每章可运行的最小实现（单一真源 → 生成快照）
-├── canonical/{ts,py}   # 教学代码真源，#step 标记按章切片
-├── run.mjs             # node steps/run.mjs <N> [--diff|--py|--live|--list]
-└── build.mjs, test.mjs # 生成快照 + 零 key 验证每一步
-```
-
-## 🏗️ 架构图
-
-```
-用户输入
-  │
-  ▼
-┌─────────────────────────────────────┐
-│          Agent Loop                 │
-│                                     │
-│  消息历史 → API (流式) → 实时输出   │
-│       ▲                   │         │
-│       │              ┌────┴───┐     │
-│       │              │文本输出│     │
-│       │              │工具调用│     │
-│       │              └────┬───┘     │
-│       │                   │         │
-│       │   ┌───────┐ ┌────▼───┐     │
-│       │   │截断保护│←│工具执行│     │
-│       │   └───────┘ └────┬───┘     │
-│       │                   │         │
-│       │   ┌───────────────▼───┐     │
-│       └───│Token 追踪 + 压缩 │     │
-│           └───────────────────┘     │
-└─────────────────────────────────────┘
-  │
-  ▼
-任务完成 → 自动保存会话
-```
-
-## 🔗 相关项目
-
-- **[how-claude-code-works](https://github.com/Windy3f3f3f3f/how-claude-code-works)** — Claude Code 源码架构深度解析（12 篇专题，33 万字）
-
-## 🤝 贡献者
-
-| <img src="https://github.com/Windy3f3f3f3f.png" width="60" /> | <img src="https://github.com/davidweidawang.png" width="60" /> | <img src="./assets/kaibo.jpg" width="60" /> |
-|:---:|:---:|:---:|
-| [@Windy3f3f3f3f](https://github.com/Windy3f3f3f3f) | [@davidweidawang](https://github.com/davidweidawang) | [Kaibo Huang](https://scholar.google.com/citations?user=C7B5X5IAAAAJ&hl=zh-CN) |
-
-## 🙏 致谢
-
-感谢 [LINUX DO](https://linux.do/) 社区的支持与讨论。
-
-## 💬 更多交流
-
-<div align="center">
-
-**加入 AI Agent 工坊 交流群**
-
-<img src="./assets/qq.jpg" width="280" alt="QQ 群二维码" />
-
-QQ 群号：**1090526244**
-
-</div>
-
-## 📈 Star History
-
-<div align="center">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Windy3f3f3f3f/claude-code-from-scratch&type=Date&theme=dark" />
-  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Windy3f3f3f3f/claude-code-from-scratch&type=Date" />
-  <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Windy3f3f3f3f/claude-code-from-scratch&type=Date" width="600" />
-</picture>
-</div>
-
-## 📄 License
-
-MIT
+主代码基于 [Windy3f3f3f3f/claude-code-from-scratch](https://github.com/Windy3f3f3f3f/claude-code-from-scratch)，基线提交 `0b452360866433fde0dc77cd37ada9d303546592`。恢复思路参考 [shareAI-lab/learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) 的工作流运行时教程。本分支保留上游历史与 [MIT LICENSE](LICENSE)，详见 [来源说明](NOTICE.md)。

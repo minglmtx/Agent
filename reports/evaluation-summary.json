@@ -1,0 +1,246 @@
+{
+  "description": "Small local-model demo, one attempt per task; not a general coding benchmark",
+  "model": "Qwen3-8B",
+  "cpu_tests_passed_before_publication": 42,
+  "paid_api_calls": 0,
+  "batches": [
+    {
+      "job_id": "4624227",
+      "slurm_elapsed_seconds": 214,
+      "split": "dev",
+      "tasks": [
+        {
+          "task": "quantity",
+          "status": "finished",
+          "stop_reason": "not_recorded_in_original_report",
+          "passed": true,
+          "elapsed_seconds": 31.111,
+          "tokens": {
+            "input": 28050,
+            "output": 328
+          },
+          "checks": [
+            {
+              "name": "existing_total",
+              "passed": true
+            },
+            {
+              "name": "empty_input",
+              "passed": true
+            },
+            {
+              "name": "allowed_artifacts",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "task": "status",
+          "status": "finished",
+          "stop_reason": "not_recorded_in_original_report",
+          "passed": false,
+          "elapsed_seconds": 32.121,
+          "tokens": {
+            "input": 32525,
+            "output": 350
+          },
+          "checks": [
+            {
+              "name": "existing_total",
+              "passed": false
+            },
+            {
+              "name": "empty_input",
+              "passed": true
+            },
+            {
+              "name": "paid",
+              "passed": false
+            },
+            {
+              "name": "pending",
+              "passed": false
+            },
+            {
+              "name": "missing",
+              "passed": false
+            },
+            {
+              "name": "allowed_artifacts",
+              "passed": false
+            }
+          ]
+        },
+        {
+          "task": "discount",
+          "status": "finished",
+          "stop_reason": "not_recorded_in_original_report",
+          "passed": false,
+          "elapsed_seconds": 60.393,
+          "tokens": {
+            "input": 55079,
+            "output": 1602
+          },
+          "checks": [
+            {
+              "name": "existing_total",
+              "passed": false
+            },
+            {
+              "name": "empty_input",
+              "passed": false
+            },
+            {
+              "name": "module_discount_api",
+              "passed": false
+            },
+            {
+              "name": "discount_10",
+              "passed": false
+            },
+            {
+              "name": "discount_100",
+              "passed": false
+            },
+            {
+              "name": "discount_99.9",
+              "passed": false
+            },
+            {
+              "name": "invalid_discount",
+              "passed": true
+            },
+            {
+              "name": "negative_discount",
+              "passed": true
+            },
+            {
+              "name": "allowed_artifacts",
+              "passed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "job_id": "4624477",
+      "slurm_elapsed_seconds": 172,
+      "split": "test",
+      "tasks": [
+        {
+          "task": "empty",
+          "status": "budget_exhausted",
+          "stop_reason": "turn_limit",
+          "passed": false,
+          "elapsed_seconds": 46.696,
+          "tokens": {
+            "input": 47305,
+            "output": 932
+          },
+          "checks": [
+            {
+              "name": "existing_total",
+              "passed": true
+            },
+            {
+              "name": "empty_input",
+              "passed": false
+            },
+            {
+              "name": "allowed_artifacts",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "task": "json",
+          "status": "finished",
+          "stop_reason": "model_finished",
+          "passed": false,
+          "elapsed_seconds": 30.651,
+          "tokens": {
+            "input": 28802,
+            "output": 372
+          },
+          "checks": [
+            {
+              "name": "existing_total",
+              "passed": true
+            },
+            {
+              "name": "empty_input",
+              "passed": true
+            },
+            {
+              "name": "json_total",
+              "passed": false
+            },
+            {
+              "name": "json_empty",
+              "passed": false
+            },
+            {
+              "name": "invalid_format",
+              "passed": true
+            },
+            {
+              "name": "allowed_artifacts",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "task": "input",
+          "status": "finished",
+          "stop_reason": "model_finished",
+          "passed": false,
+          "elapsed_seconds": 26.902,
+          "tokens": {
+            "input": 36736,
+            "output": 403
+          },
+          "checks": [
+            {
+              "name": "existing_total",
+              "passed": false
+            },
+            {
+              "name": "empty_input",
+              "passed": false
+            },
+            {
+              "name": "module_bom_api",
+              "passed": false
+            },
+            {
+              "name": "named_bom",
+              "passed": false
+            },
+            {
+              "name": "positional_bom",
+              "passed": false
+            },
+            {
+              "name": "both_sources",
+              "passed": true
+            },
+            {
+              "name": "neither_source",
+              "passed": true
+            },
+            {
+              "name": "allowed_artifacts",
+              "passed": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "Old dev discount status finished means subprocess exited; trajectory shows tool-turn budget exhaustion. Original record retained.",
+    "Artifact checks compare final hashes, not all intermediate writes.",
+    "The final job elapsed time includes summary checks.",
+    "No upstream-versus-modified coding success-rate comparison was performed."
+  ]
+}

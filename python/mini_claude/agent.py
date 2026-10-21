@@ -67,7 +67,11 @@ from .ui import (
     start_spinner,
     stop_spinner,
 )
-from .session import save_session
+from .session import save_session, state_dir
+from .execution_journal import ExecutionJournal, UnknownExecution, JournalConflict
+from .session_lock import session_lease
+from .command_runner import cancel_all_commands
+from .context_summary import SUMMARY_SYSTEM_PROMPT, SUMMARY_PREFIX, summary_request, validate_summary, split_history
 from .prompt import build_system_prompt, build_static_system_prompt, build_dynamic_system_context, build_user_context_reminder, load_claude_md
 from .subagent import get_sub_agent_config
 from .mcp_client import McpManager
@@ -203,8 +207,16 @@ class Agent:
         self.max_cost_usd = max_cost_usd
         self.max_turns = max_turns
         self.confirm_fn = confirm_fn
-        self.effective_window = _get_context_window(model) - 20000
+        self.context_window = int(os.environ.get("MINI_CLAUDE_CONTEXT_WINDOW", _get_context_window(model)))
+        self.max_output_tokens = int(os.environ.get("MINI_CLAUDE_MAX_OUTPUT_TOKENS", "2048"))
+        self.effective_window = self.context_window - self.max_output_tokens - 256
+        if self.effective_window < 1024:
+            raise ValueError("Context window must leave at least 1024 input tokens")
+        self.local_model = os.environ.get("MINI_CLAUDE_LOCAL_MODEL") == "1"
+        self._tokenizer = None
+        self.compaction_events = []
         self.session_id = uuid.uuid4().hex[:8]
+        self._journal = ExecutionJournal(self.session_id)
         self.session_start_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
         self.total_input_tokens = 0
@@ -213,6 +225,7 @@ class Agent:
         self.total_cache_creation_tokens = 0   # Prompt-cache writes (billed ~1.25x)
         self.last_input_token_count = 0
         self.current_turns = 0
+        self.stop_reason = "not_started"
         self.last_api_call_time = 0.0
 
         # /goal — session-scoped Stop-hook condition, pursued across turns
@@ -400,6 +413,7 @@ class Agent:
 
     def abort(self) -> None:
         self._aborted = True
+        cancel_all_commands()
         if self._current_task and not self._current_task.done():
             self._current_task.cancel()
 
@@ -437,6 +451,14 @@ class Agent:
     # ─── Main entry point ────────────────────────────────────
 
     async def chat(self, user_message: str) -> None:
+        with session_lease(self.session_id):
+            await self._chat_leased(user_message)
+
+    async def _chat_leased(self, user_message: str) -> None:
+        unresolved = self._journal.unresolved()
+        if unresolved:
+            ids = ", ".join(r["call_id"] for r in unresolved)
+            raise UnknownExecution(f"Uncertain previous execution(s): {ids}. Inspect state then use --resume-id {self.session_id} --ack-unknown 'verification note'. No new tools dispatched.")
         # Lazily connect to MCP servers on first chat (main agent only)
         if not self._mcp_initialized and not self.is_sub_agent:
             self._mcp_initialized = True
@@ -449,17 +471,25 @@ class Agent:
                 print(f"[mcp] Init failed: {e}", flush=True)
 
         self._aborted = False
+        self.stop_reason = "running"
         coro = self._chat_openai(user_message) if self.use_openai else self._chat_anthropic(user_message)
         self._current_task = asyncio.current_task()
         try:
             await coro
         except asyncio.CancelledError:
             self._aborted = True
+            self.stop_reason = "cancelled"
+        except Exception:
+            self.stop_reason = "runtime_error"
+            raise
         finally:
+            if self._aborted:
+                self.stop_reason = "cancelled"
             self._current_task = None
+            self._repair_pending_results()
+            self._auto_save()
         if not self.is_sub_agent:
             print_divider()
-            self._auto_save()
 
     # ─── Sub-agent entry point ────────────────────────────────
 
@@ -472,6 +502,7 @@ class Agent:
         self._output_buffer = None
         return {
             "text": text,
+            "stop_reason": self.stop_reason,
             "tokens": {
                 "input": self.total_input_tokens - prev_in,
                 "output": self.total_output_tokens - prev_out,
@@ -514,6 +545,8 @@ class Agent:
         print_info(f"Tokens: {self.total_input_tokens} in / {self.total_output_tokens} out{cache_info}\n  Estimated cost: ${total:.4f}{budget_info}{turn_info}")
 
     def _get_current_cost_usd(self) -> float:
+        if self.local_model:
+            return 0.0  # API billing only; GPU allocation is not free.
         # Base input $3/Mtok. Cache read is 0.1x, cache write is 1.25x — the
         # fixed multipliers Claude Code uses across every model tier.
         M = 1_000_000
@@ -527,8 +560,8 @@ class Agent:
     def _check_budget(self) -> dict:
         if self.max_cost_usd is not None and self._get_current_cost_usd() >= self.max_cost_usd:
             return {"exceeded": True, "reason": f"Cost limit reached (${self._get_current_cost_usd():.4f} >= ${self.max_cost_usd})"}
-        if self.max_turns is not None and self.current_turns >= self.max_turns:
-            return {"exceeded": True, "reason": f"Turn limit reached ({self.current_turns} >= {self.max_turns})"}
+        if self.max_turns is not None and self.current_turns > self.max_turns:
+            return {"exceeded": True, "reason": f"Turn limit reached ({self.max_turns} tool rounds executed; next round withheld)"}
         return {"exceeded": False}
 
     async def compact(self) -> None:
@@ -927,30 +960,81 @@ class Agent:
     # ─── Session ──────────────────────────────────────────────
 
     def restore_session(self, data: dict) -> None:
+        meta = data.get("metadata", {})
+        if meta.get("cwd") and Path(meta["cwd"]).resolve() != Path.cwd().resolve():
+            raise ValueError("Resume must use the original working directory: " + meta["cwd"])
+        if meta.get("model") and meta["model"] != self.model:
+            raise ValueError("Resume must use the original model")
+        if meta.get("id"):
+            self.session_id = meta["id"]
+            self.session_start_time = meta.get("startTime", self.session_start_time)
+            self._journal = ExecutionJournal(self.session_id)
         if data.get("anthropicMessages"):
             self._anthropic_messages = data["anthropicMessages"]
         if data.get("openaiMessages"):
             self._openai_messages = data["openaiMessages"]
-        print_info(f"Session restored ({self._get_message_count()} messages).")
+        for key in ("total_input_tokens", "total_output_tokens", "total_cache_read_tokens",
+                    "total_cache_creation_tokens", "last_input_token_count"):
+            setattr(self, key, data.get("usage", {}).get(key, 0))
+        self.compaction_events = data.get("compaction_events", [])
+        self._repair_pending_results()
+        print_info(f"Session {self.session_id} restored ({self._get_message_count()} messages).")
+
+    def _repair_pending_results(self) -> None:
+        """Complete protocol pairs from the journal without executing any tool."""
+        messages = self._openai_messages if self.use_openai else self._anthropic_messages
+        pending = {}
+        for msg in messages:
+            if self.use_openai:
+                for tc in msg.get("tool_calls") or []:
+                    pending[tc["id"]] = tc
+                if msg.get("role") == "tool":
+                    pending.pop(msg.get("tool_call_id"), None)
+            elif isinstance(msg.get("content"), list):
+                for block in msg["content"]:
+                    if block.get("type") == "tool_use":
+                        pending[block["id"]] = block
+                    elif block.get("type") == "tool_result":
+                        pending.pop(block.get("tool_use_id"), None)
+        recovered = []
+        for call_id in pending:
+            record = self._journal.lookup(call_id)
+            if record:
+                tc = pending[call_id]
+                if self.use_openai:
+                    name, args = tc["function"]["name"], json.loads(tc["function"]["arguments"])
+                else:
+                    name, args = tc["name"], tc["input"]
+                if record["name"] != name or record["args"] != args:
+                    raise JournalConflict(f"Snapshot and journal disagree for {call_id}")
+            if record and record.get("state") == "completed":
+                result = record["result"]
+            elif record:
+                result = "Execution result UNKNOWN after interruption. Do not repeat effects; user verification is required."
+            else:
+                result = "Not executed: interrupted before tool dispatch."
+            if self.use_openai:
+                messages.append({"role": "tool", "tool_call_id": call_id, "content": result})
+            else:
+                recovered.append({"type": "tool_result", "tool_use_id": call_id, "content": result})
+        if recovered:
+            messages.append({"role": "user", "content": recovered})
 
     def _get_message_count(self) -> int:
         return len(self._openai_messages) if self.use_openai else len(self._anthropic_messages)
 
     def _auto_save(self) -> None:
-        try:
-            save_session(self.session_id, {
-                "metadata": {
-                    "id": self.session_id,
-                    "model": self.model,
-                    "cwd": str(Path.cwd()),
-                    "startTime": self.session_start_time,
-                    "messageCount": self._get_message_count(),
-                },
-                "anthropicMessages": self._anthropic_messages if not self.use_openai else None,
-                "openaiMessages": self._openai_messages if self.use_openai else None,
-            })
-        except Exception:
-            pass
+        # Fail visibly on storage errors; never execute a side effect after a failed checkpoint.
+        save_session(self.session_id, {
+            "metadata": {"id": self.session_id, "model": self.model, "cwd": str(Path.cwd()),
+                         "startTime": self.session_start_time, "messageCount": self._get_message_count()},
+            "anthropicMessages": self._anthropic_messages if not self.use_openai else None,
+            "openaiMessages": self._openai_messages if self.use_openai else None,
+            "usage": {k: getattr(self, k) for k in ("total_input_tokens", "total_output_tokens",
+                      "total_cache_read_tokens", "total_cache_creation_tokens", "last_input_token_count")},
+            "compaction_events": self.compaction_events,
+            "stop_reason": self.stop_reason,
+        })
 
     # ─── Autocompact ──────────────────────────────────────────
 
@@ -960,64 +1044,91 @@ class Agent:
             await self._compact_conversation()
 
     async def _compact_conversation(self) -> None:
-        if self.use_openai:
-            await self._compact_openai()
-        else:
-            await self._compact_anthropic()
-        print_info("Conversation compacted.")
+        await self._compact_structured()
 
     async def _compact_anthropic(self) -> None:
-        # Invariant: caller must ensure the last message is a plain user-text
-        # message (not a tool_result). We slice it off below; if it were a
-        # tool_result, the preceding assistant's tool_use would be orphaned
-        # and the API would reject the summarize call.
-        if len(self._anthropic_messages) < 4:
-            return
-        last_user_msg = self._anthropic_messages[-1]
-        summary_resp = await self._anthropic_client.messages.create(
-            model=self.model,
-            max_tokens=2048,
-            system="You are a conversation summarizer. Be concise but preserve important details.",
-            messages=[
-                *self._anthropic_messages[:-1],
-                {"role": "user", "content": "Summarize the conversation so far in a concise paragraph, preserving key decisions, file paths, and context needed to continue the work."},
-            ],
-        )
-        summary_text = summary_resp.content[0].text if summary_resp.content and summary_resp.content[0].type == "text" else "No summary available."
-        self._anthropic_messages = [
-            {"role": "user", "content": f"[Previous conversation summary]\n{summary_text}"},
-            {"role": "assistant", "content": "Understood. I have the context from our previous conversation. How can I continue helping?"},
-        ]
-        if last_user_msg.get("role") == "user":
-            self._anthropic_messages.append(last_user_msg)
-        self.last_input_token_count = 0
+        await self._compact_structured()
 
     async def _compact_openai(self) -> None:
-        # Invariant: caller must ensure the last message is a plain user-text
-        # message (not a `tool` role result). Same reasoning as
-        # _compact_anthropic — slicing off a tool result would orphan the
-        # preceding assistant's tool_calls.
-        if len(self._openai_messages) < 5:
-            return
-        system_msg = self._openai_messages[0]
-        last_user_msg = self._openai_messages[-1]
-        summary_resp = await self._openai_client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": "You are a conversation summarizer. Be concise but preserve important details."},
-                *self._openai_messages[1:-1],
-                {"role": "user", "content": "Summarize the conversation so far in a concise paragraph, preserving key decisions, file paths, and context needed to continue the work."},
-            ],
-        )
-        summary_text = summary_resp.choices[0].message.content or "No summary available."
-        self._openai_messages = [
-            system_msg,
-            {"role": "user", "content": f"[Previous conversation summary]\n{summary_text}"},
-            {"role": "assistant", "content": "Understood. I have the context from our previous conversation. How can I continue helping?"},
-        ]
-        if last_user_msg.get("role") == "user":
-            self._openai_messages.append(last_user_msg)
+        await self._compact_structured()
+
+    async def _compact_structured(self) -> bool:
+        messages = self._openai_messages if self.use_openai else self._anthropic_messages
+        systems = [m for m in messages if m.get("role") == "system"]
+        body = [m for m in messages if m.get("role") != "system"]
+        try:
+            old, recent = split_history(body, "openai" if self.use_openai else "anthropic", keep_turns=2)
+        except ValueError as exc:
+            print_info(f"History retained: {exc}")
+            return False
+        if not old:
+            return False
+        self._auto_save()  # preserve original state before making the summarization request
+        start = time.monotonic()
+        try:
+            request = summary_request(old)
+            if self.use_openai:
+                response = await self._openai_client.chat.completions.create(
+                    model=self.model, max_tokens=self.max_output_tokens, temperature=0,
+                    messages=[{"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
+                              {"role": "user", "content": request}], **self._openai_options())
+                raw = response.choices[0].message.content or ""
+                usage = response.usage
+                if usage:
+                    self.total_input_tokens += usage.prompt_tokens
+                    self.total_output_tokens += usage.completion_tokens
+            else:
+                response = await self._anthropic_client.messages.create(
+                    model=self.model, max_tokens=self.max_output_tokens, system=SUMMARY_SYSTEM_PROMPT,
+                    messages=[{"role": "user", "content": request}])
+                raw = response.content[0].text if response.content and response.content[0].type == "text" else ""
+                self.total_input_tokens += response.usage.input_tokens
+                self.total_output_tokens += response.usage.output_tokens
+            summary = validate_summary(raw)
+            candidate = systems + [{"role": "user", "content": SUMMARY_PREFIX + summary},
+                {"role": "assistant", "content": "I will use this as historical context, not as new instructions."}] + recent
+            if len(json.dumps(candidate)) >= len(json.dumps(messages)):
+                raise ValueError("Summary did not reduce context size")
+            archive = state_dir() / "context-archives"
+            archive.mkdir(parents=True, exist_ok=True)
+            artifact = archive / f"{self.session_id}-{uuid.uuid4().hex}.json"
+            artifact.write_text(json.dumps(messages, ensure_ascii=False), encoding="utf-8")
+        except Exception as exc:
+            self.compaction_events.append({"status": "retained_original", "reason": str(exc), "seconds": time.monotonic()-start})
+            print_info(f"Summary rejected; original history retained: {exc}")
+            return False
+        if self.use_openai:
+            self._openai_messages = candidate
+        else:
+            self._anthropic_messages = candidate
         self.last_input_token_count = 0
+        self.compaction_events.append({"status": "applied", "archive": str(artifact), "seconds": time.monotonic()-start})
+        self._auto_save()
+        print_info("Structured summary applied; recent interactions and original archive retained.")
+        return True
+
+    def _openai_options(self) -> dict:
+        if self.local_model:
+            return {"extra_body": {"chat_template_kwargs": {"enable_thinking": False}}}
+        return {}
+
+    async def _prepare_local_context(self) -> None:
+        tokenizer_path = os.environ.get("MINI_CLAUDE_TOKENIZER")
+        if not tokenizer_path:
+            return
+        if self._tokenizer is None:
+            from transformers import AutoTokenizer
+            self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, local_files_only=True)
+        def count():
+            return len(self._tokenizer.apply_chat_template(self._openai_messages,
+                tools=_to_openai_tools(get_active_tool_definitions(self.tools)),
+                tokenize=True, add_generation_prompt=True, enable_thinking=False))
+        n = count()
+        if n > int(self.effective_window * 0.85):
+            await self._compact_structured()
+            n = count()
+        if n > self.effective_window:
+            raise RuntimeError(f"Context budget exceeded ({n} > {self.effective_window}); history preserved, no silent truncation.")
 
     # ─── Multi-tier compression pipeline ──────────────────────
 
@@ -1169,7 +1280,7 @@ class Agent:
         THRESHOLD = 30 * 1024  # 30 KB
         if len(result.encode()) <= THRESHOLD:
             return result
-        d = Path.home() / ".mini-claude" / "tool-results"
+        d = state_dir() / "tool-results"
         d.mkdir(parents=True, exist_ok=True)
         # uuid suffix: parallel tools can persist in the same millisecond —
         # a timestamp-only name would let the second write clobber the first.
@@ -1193,7 +1304,21 @@ class Agent:
 
     # ─── Execute tool (handles agent/skill/plan mode internally) ─────
 
-    async def _execute_tool_call(self, name: str, inp: dict) -> str:
+    async def _execute_tool_call(self, name: str, inp: dict, call_id: str | None = None) -> str:
+        call_id = call_id or uuid.uuid4().hex
+        self._auto_save()
+        cached = self._journal.begin(call_id, name, inp)
+        if cached is not None:
+            return cached
+        try:
+            result = await self._dispatch_tool(name, inp)
+            self._journal.complete(call_id, result)
+            return result
+        except BaseException as exc:
+            self._journal.mark_unknown(call_id, type(exc).__name__)
+            raise
+
+    async def _dispatch_tool(self, name: str, inp: dict) -> str:
         if name in ("enter_plan_mode", "exit_plan_mode"):
             return await self._execute_plan_mode_tool(name)
         if name == "agent":
@@ -1400,8 +1525,14 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
     async def close(self) -> None:
         """Release external resources (MCP subprocesses) for a clean exit —
         see issue #8."""
+        if not self.is_sub_agent:
+            cancel_all_commands()
         if self._mcp_initialized:
             await self._mcp_manager.disconnect_all()
+        if self._openai_client:
+            await self._openai_client.close()
+        if self._anthropic_client:
+            await self._anthropic_client.close()
 
     def _consume_memory_prefetch_if_ready(self, messages: list) -> None:
         """Inject recalled memories if the prefetch settled (non-blocking).
@@ -1434,6 +1565,8 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
         """Drain any carry-over prefetch from the previous turn (a recall
         that settled after the last API call would otherwise be dropped —
         issue #7), then start a fresh prefetch for this query."""
+        if os.environ.get("MINI_CLAUDE_DISABLE_MEMORY") == "1":
+            return
         self._consume_memory_prefetch_if_ready(messages)
         if self.is_sub_agent:
             return
@@ -1500,6 +1633,8 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
             early_executions: dict[str, asyncio.Task] = {}
 
             def _on_tool_block(block: dict):
+                # Persist the complete assistant request before dispatch; no speculative reads.
+                return
                 # In Auto Mode, only fast-path (classifier-exempt) tools may start
                 # early — otherwise a concurrency-safe-but-classified tool (e.g.
                 # web_fetch) would run before the classifier ever sees it.
@@ -1508,7 +1643,7 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
                 if block["name"] in CONCURRENCY_SAFE_TOOLS:
                     perm = check_permission(block["name"], block["input"], self.permission_mode, self._plan_file_path)
                     if perm["action"] == "allow":
-                        task = asyncio.create_task(self._execute_tool_call(block["name"], block["input"]))
+                        task = asyncio.create_task(self._execute_tool_call(block["name"], block["input"], block["id"]))
                         early_executions[block["id"]] = task
 
             response = await self._call_anthropic_stream(on_tool_block_complete=_on_tool_block)
@@ -1541,13 +1676,15 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
             })
 
             if not tool_uses:
+                self.stop_reason = "model_finished"
                 if not self.is_sub_agent:
-                    print_cost(self.total_input_tokens, self.total_output_tokens, self.total_cache_read_tokens, self.total_cache_creation_tokens)
+                    self.show_cost()
                 break
 
             self.current_turns += 1
             budget = self._check_budget()
             if budget["exceeded"]:
+                self.stop_reason = "turn_limit" if budget["reason"].startswith("Turn limit") else "cost_limit"
                 print_info(f"Budget exceeded: {budget['reason']}")
                 # Every tool_use needs a paired tool_result or the message
                 # history is invalid for the next API call. Pair each pending
@@ -1603,7 +1740,7 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
                         if cacheable:
                             self._confirmed_paths.add(perm["message"])
 
-                raw = await self._execute_tool_call(tu.name, inp)
+                raw = await self._execute_tool_call(tu.name, inp, tu.id)
                 res = self._persist_large_result(tu.name, raw)
                 print_tool_result(tu.name, res)
 
@@ -1759,16 +1896,19 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
             message = choice.get("message", {})
 
             self._openai_messages.append(message)
+            self._auto_save()
 
             tool_calls = message.get("tool_calls")
             if not tool_calls:
+                self.stop_reason = "model_finished"
                 if not self.is_sub_agent:
-                    print_cost(self.total_input_tokens, self.total_output_tokens, self.total_cache_read_tokens, self.total_cache_creation_tokens)
+                    self.show_cost()
                 break
 
             self.current_turns += 1
             budget = self._check_budget()
             if budget["exceeded"]:
+                self.stop_reason = "turn_limit" if budget["reason"].startswith("Turn limit") else "cost_limit"
                 print_info(f"Budget exceeded: {budget['reason']}")
                 # Same pairing requirement as the Anthropic path: every
                 # tool_call needs a role="tool" response.
@@ -1791,8 +1931,12 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
                 fn_name = tc["function"]["name"]
                 try:
                     inp = json.loads(tc["function"]["arguments"])
-                except Exception:
-                    inp = {}
+                    if not isinstance(inp, dict):
+                        raise ValueError("Tool arguments must be an object")
+                except Exception as exc:
+                    oai_checked.append({"tc": tc, "fn": fn_name, "inp": {}, "allowed": False,
+                        "result": f"Invalid tool arguments; not executed: {exc}"})
+                    continue
 
                 print_tool_call(fn_name, inp)
 
@@ -1834,12 +1978,15 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
 
                 if batch["concurrent"]:
                     async def _run_oai_safe(ct_item: dict) -> tuple[dict, str]:
-                        raw = await self._execute_tool_call(ct_item["fn"], ct_item["inp"])
+                        raw = await self._execute_tool_call(ct_item["fn"], ct_item["inp"], ct_item["tc"]["id"])
                         res = self._persist_large_result(ct_item["fn"], raw)
                         print_tool_result(ct_item["fn"], res)
                         return ct_item, res
 
-                    results = await asyncio.gather(*[_run_oai_safe(ct) for ct in batch["items"]])
+                    results = await asyncio.gather(*[_run_oai_safe(ct) for ct in batch["items"]], return_exceptions=True)
+                    failures = [r for r in results if isinstance(r, BaseException)]
+                    if failures:
+                        raise failures[0]
                     for ct_item, res in results:
                         self._openai_messages.append({"role": "tool", "tool_call_id": ct_item["tc"]["id"], "content": res})
                 else:
@@ -1847,7 +1994,7 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
                         if not ct["allowed"]:
                             self._openai_messages.append({"role": "tool", "tool_call_id": ct["tc"]["id"], "content": ct["result"]})
                             continue
-                        raw = await self._execute_tool_call(ct["fn"], ct["inp"])
+                        raw = await self._execute_tool_call(ct["fn"], ct["inp"], ct["tc"]["id"])
                         res = self._persist_large_result(ct["fn"], raw)
                         print_tool_result(ct["fn"], res)
 
@@ -1863,10 +2010,12 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
             self._context_cleared = False
 
     async def _call_openai_stream(self) -> dict:
+        await self._prepare_local_context()
         async def _do():
             stream = await self._openai_client.chat.completions.create(
                 model=self.model,
-                max_tokens=16384,
+                max_tokens=self.max_output_tokens,
+                **self._openai_options(),
                 tools=_to_openai_tools(get_active_tool_definitions(self.tools)),
                 messages=self._openai_messages,
                 stream=True,
@@ -1904,6 +2053,10 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
                     for tc in delta.tool_calls:
                         existing = tool_calls.get(tc.index)
                         if existing:
+                            if tc.id:
+                                existing["id"] = tc.id
+                            if tc.function and tc.function.name:
+                                existing["name"] += tc.function.name
                             if tc.function and tc.function.arguments:
                                 existing["arguments"] += tc.function.arguments
                         else:
@@ -1917,6 +2070,10 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
                     finish_reason = chunk.choices[0].finish_reason
 
             assembled = None
+            if tool_calls and finish_reason == "length":
+                raise RuntimeError("Model output exhausted its token budget during tool generation; no tool executed")
+            if any(not tc["id"] or not tc["name"] for tc in tool_calls.values()):
+                raise RuntimeError("Incomplete streamed tool call identity; no tool executed")
             if tool_calls:
                 assembled = [
                     {"id": tc["id"], "type": "function", "function": {"name": tc["name"], "arguments": tc["arguments"]}}

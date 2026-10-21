@@ -1,0 +1,6 @@
+quantity {'original_passes': False, 'reference_passes': True}
+empty {'original_passes': False, 'reference_passes': True}
+status {'original_passes': False, 'reference_passes': True}
+json {'original_passes': False, 'reference_passes': True}
+discount {'original_passes': False, 'reference_passes': True}
+input {'original_passes': False, 'reference_passes': True}

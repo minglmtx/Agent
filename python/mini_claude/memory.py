@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .session import state_dir
 from .frontmatter import parse_frontmatter, format_frontmatter
 
 # A callable that sends a prompt and returns model text response.
@@ -45,7 +46,7 @@ def _project_hash() -> str:
 
 
 def get_memory_dir() -> Path:
-    d = Path.home() / ".mini-claude" / "projects" / _project_hash() / "memory"
+    d = state_dir() / "projects" / _project_hash() / "memory"
     d.mkdir(parents=True, exist_ok=True)
     return d
 

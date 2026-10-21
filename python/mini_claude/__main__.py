@@ -11,6 +11,8 @@ import sys
 from .agent import Agent
 from .ui import print_welcome, print_user_prompt, print_error, print_info, print_plan_for_approval, print_plan_approval_options
 from .session import load_session, get_latest_session_id
+from .session_lock import session_lease
+from .tools import set_shell_output_callback
 from .memory import list_memories
 from .skills import discover_skills, resolve_skill_prompt, get_skill_by_name, execute_skill
 
@@ -30,6 +32,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--thinking", action="store_true", help="Enable extended thinking")
     parser.add_argument("--model", "-m", default=None, help="Model to use")
     parser.add_argument("--api-base", default=None, help="OpenAI-compatible API base URL")
+    parser.add_argument("--resume-id", help="Resume an explicit session ID")
+    parser.add_argument("--ack-unknown", help="After manual verification, acknowledge uncertain executions with this note")
     parser.add_argument("--resume", action="store_true", help="Resume last session")
     parser.add_argument("--max-cost", type=float, default=None, help="Max USD spend")
     parser.add_argument("--max-turns", type=int, default=None, help="Max agentic turns")
@@ -239,6 +243,8 @@ Options:
   --model, -m         Model to use (default: claude-opus-4-6, or MINI_CLAUDE_MODEL env)
   --api-base URL      Use OpenAI-compatible API endpoint (key via env var)
   --resume            Resume the last session
+  --resume-id ID      Resume a specific session
+  --ack-unknown NOTE  After inspection, acknowledge uncertain previous effects
   --max-cost USD      Stop when estimated cost exceeds this amount
   --max-turns N       Stop after N agentic turns
   --help, -h          Show this help
@@ -311,29 +317,42 @@ Examples:
         api_key=resolved_api_key,
     )
 
-    # Resume session
-    if args.resume:
-        session_id = get_latest_session_id()
+    set_shell_output_callback(lambda stream, text: print(text, end="", file=sys.stderr if stream == "stderr" else sys.stdout, flush=True))
+
+    # Resume the exact session and reconcile saved tool results, never replay effects.
+    if args.ack_unknown and not (args.resume or args.resume_id):
+        print_error("--ack-unknown requires --resume or --resume-id")
+        sys.exit(1)
+    if args.resume or args.resume_id:
+        session_id = args.resume_id or get_latest_session_id()
         if session_id:
             session = load_session(session_id)
             if session:
-                agent.restore_session({
-                    "anthropicMessages": session.get("anthropicMessages"),
-                    "openaiMessages": session.get("openaiMessages"),
-                })
+                with session_lease(session_id):
+                    agent.restore_session(session)
+                    if args.ack_unknown:
+                        for record in agent._journal.unresolved():
+                            agent._journal.acknowledge_unknown(record["call_id"], args.ack_unknown)
+                        agent._auto_save()
             else:
                 print_info("No session found to resume.")
         else:
             print_info("No previous sessions found.")
 
+    print_info(f"Session ID: {agent.session_id}")
     prompt = " ".join(args.prompt) if args.prompt else None
 
     if prompt:
         # One-shot mode — always release MCP subprocesses on the way out
         # (issue #8)
         async def _one_shot() -> None:
+            loop = asyncio.get_running_loop()
+            for sig in (signal.SIGINT, signal.SIGTERM):
+                loop.add_signal_handler(sig, agent.abort)
             try:
                 await agent.chat(prompt)
+                if agent._aborted:
+                    raise SystemExit(130)
             finally:
                 await agent.close()
         try:

@@ -1,0 +1,64 @@
+Publication validation, 2026-10-21. No model/API requests.
+A test-only /proc read race was fixed before this passing run.
+
+test_cancellation_marks_unknown_and_blocks_next_chat (test_agent_recovery_integration.AgentRecoveryTests.test_cancellation_marks_unknown_and_blocks_next_chat) ... ok
+test_checkpoint_with_call_is_durable_before_effect (test_agent_recovery_integration.AgentRecoveryTests.test_checkpoint_with_call_is_durable_before_effect) ... ok
+test_failed_checkpoint_prevents_effect_and_journal_start (test_agent_recovery_integration.AgentRecoveryTests.test_failed_checkpoint_prevents_effect_and_journal_start) ... ok
+test_never_started_call_gets_protocol_result_without_execution (test_agent_recovery_integration.AgentRecoveryTests.test_never_started_call_gets_protocol_result_without_execution) ...
+  ℹ Session a4a5de2a restored (3 messages).
+ok
+test_restore_same_identity_replays_completed_result_without_dispatch (test_agent_recovery_integration.AgentRecoveryTests.test_restore_same_identity_replays_completed_result_without_dispatch) ...
+  ℹ Session a3d96e2d restored (3 messages).
+ok
+test_session_lease_rejects_second_holder_and_releases (test_agent_recovery_integration.AgentRecoveryTests.test_session_lease_rejects_second_holder_and_releases) ... ok
+test_build_classifier_transcript (test_autonomy.TestAutonomyGolden.test_build_classifier_transcript) ... ok
+test_clamp_wakeup_delay (test_autonomy.TestAutonomyGolden.test_clamp_wakeup_delay) ... ok
+test_is_daily_wording (test_autonomy.TestAutonomyGolden.test_is_daily_wording) ... ok
+test_parse_block_verdict (test_autonomy.TestAutonomyGolden.test_parse_block_verdict) ... ok
+test_parse_duration_to_seconds (test_autonomy.TestAutonomyGolden.test_parse_duration_to_seconds) ... ok
+test_parse_goal_verdict (test_autonomy.TestAutonomyGolden.test_parse_goal_verdict) ... ok
+test_parse_loop_input (test_autonomy.TestAutonomyGolden.test_parse_loop_input) ... ok
+test_project_action_for_classifier (test_autonomy.TestAutonomyGolden.test_project_action_for_classifier) ... ok
+test_fast_path_skips_classifier (test_autonomy_flow.TestTwoStageFlow.test_fast_path_skips_classifier) ... ok
+test_stage1_allow_one_call (test_autonomy_flow.TestTwoStageFlow.test_stage1_allow_one_call) ... ok
+test_stage1_block_then_stage2_allow (test_autonomy_flow.TestTwoStageFlow.test_stage1_block_then_stage2_allow) ... ok
+test_stage2_block_denial_counted_once (test_autonomy_flow.TestTwoStageFlow.test_stage2_block_denial_counted_once) ... ok
+test_stage2_unparseable_blocks (test_autonomy_flow.TestTwoStageFlow.test_stage2_unparseable_blocks) ... ok
+test_background_child_does_not_outlive_successful_command (test_command_runner.CommandRunnerTests.test_background_child_does_not_outlive_successful_command) ... ok
+test_cancel_all_cleans_ignoring_descendant (test_command_runner.CommandRunnerTests.test_cancel_all_cleans_ignoring_descendant) ... ok
+test_failure_and_callback_exception (test_command_runner.CommandRunnerTests.test_failure_and_callback_exception) ... ok
+test_output_and_log_are_bounded (test_command_runner.CommandRunnerTests.test_output_and_log_are_bounded) ... ok
+test_precancelled_command_does_not_execute (test_command_runner.CommandRunnerTests.test_precancelled_command_does_not_execute) ... ok
+test_streaming_before_exit_and_stderr (test_command_runner.CommandRunnerTests.test_streaming_before_exit_and_stderr) ... ok
+test_timeout_keeps_partial_output (test_command_runner.CommandRunnerTests.test_timeout_keeps_partial_output) ... ok
+test_async_cancellation_stops_command_before_return (test_command_runner.ToolCancellationTests.test_async_cancellation_stops_command_before_return) ... ok
+test_anthropic_tool_results_are_not_new_user_turns (test_context_summary.ContextSummaryTests.test_anthropic_tool_results_are_not_new_user_turns) ... ok
+test_invalid_pairs_rejected_without_modifying_history (test_context_summary.ContextSummaryTests.test_invalid_pairs_rejected_without_modifying_history) ... ok
+test_openai_preserves_recent_complete_turns (test_context_summary.ContextSummaryTests.test_openai_preserves_recent_complete_turns) ... ok
+test_single_long_tool_turn_keeps_objective_and_last_rounds (test_context_summary.ContextSummaryTests.test_single_long_tool_turn_keeps_objective_and_last_rounds) ... ok
+test_valid_summary_and_invalid_summary (test_context_summary.ContextSummaryTests.test_valid_summary_and_invalid_summary) ... ok
+test_completed_call_reuses_result_without_repeat_and_rejects_conflict (test_recovery.RecoveryTests.test_completed_call_reuses_result_without_repeat_and_rejects_conflict) ... ok
+test_corrupt_files_fail_explicitly_and_remain_unchanged (test_recovery.RecoveryTests.test_corrupt_files_fail_explicitly_and_remain_unchanged) ... ok
+test_duplicate_concurrent_begin_only_one_starts (test_recovery.RecoveryTests.test_duplicate_concurrent_begin_only_one_starts) ... ok
+test_interrupted_atomic_save_preserves_previous_session (test_recovery.RecoveryTests.test_interrupted_atomic_save_preserves_previous_session) ... ok
+test_session_ids_cannot_escape_directory_and_invalid_shape_is_corruption (test_recovery.RecoveryTests.test_session_ids_cannot_escape_directory_and_invalid_shape_is_corruption) ... ok
+test_unknown_effect_survives_restart_and_acknowledgement_is_not_replay (test_recovery.RecoveryTests.test_unknown_effect_survives_restart_and_acknowledgement_is_not_replay) ... ok
+test_budget_stop_is_not_model_finish (test_stop_reason.StopReasonTests.test_budget_stop_is_not_model_finish) ...
+  ℹ Budget exceeded: Turn limit reached (0 tool rounds executed; next round
+withheld)
+ok
+test_model_finish_does_not_imply_evaluation_success (test_stop_reason.StopReasonTests.test_model_finish_does_not_imply_evaluation_success) ... ok
+test_bad_summary_retains_every_original_message (test_summary_integration.SummaryIntegrationTests.test_bad_summary_retains_every_original_message) ...
+  ℹ Summary rejected; original history retained: summary fields do not match the
+schema
+Executing <Task finished name='Task-86' coro=<SummaryIntegrationTests.test_bad_summary_retains_every_original_message() done, defined at <REPO>/python/tests/test_summary_integration.py:40> result=None created at <BASE_ENV>/lib/python3.11/asyncio/runners.py:100> took 0.312 seconds
+ok
+test_valid_summary_preserves_recent_pairs_and_original_archive (test_summary_integration.SummaryIntegrationTests.test_valid_summary_preserves_recent_pairs_and_original_archive) ...
+  ℹ Structured summary applied; recent interactions and original archive
+retained.
+ok
+
+----------------------------------------------------------------------
+Ran 42 tests in 2.637s
+
+OK

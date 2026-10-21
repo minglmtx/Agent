@@ -10,3 +10,20 @@ steps/dist/
 .mini-memory/
 .mini-skills/
 .mini-mcp.json
+
+# Local demo runtime, weights, credentials, and installation outputs
+.venv/
+.demo-runtime/
+demo-results/
+*.egg-info/
+.pytest_cache/
+.env.*
+!.env.example
+coding-demo-*.log
+*.safetensors
+*.sif
+/reports/*.log
+/reports/cli-help.txt
+/reports/vllm-help.txt
+/reports/scheduling.json
+/reports/delivery.json

@@ -1,3 +1,5 @@
+> 本分支在上游 Python 实现上增加了可靠性改造。请先看 [本分支首页](../README.md) 与 [技术文档](../docs/demo/ARCHITECTURE.md)。以下保留上游安装和功能说明，双语言一致性等原始描述不代表本分支新增验证结论。
+
 # Mini Claude Code — Python 版
 
 与 TypeScript 版功能 99% 一致的 Python 实现。**需要 Python >= 3.11**。
