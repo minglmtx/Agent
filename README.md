@@ -79,11 +79,12 @@ bash /path/to/Agent/scripts/run-local.sh --accept-edits \
 
 建议按顺序阅读：
 
-1. [教程导航与上游关系](docs/demo/TUTORIALS.md)：两个参考项目怎么读，本项目新增内容在哪里。
-2. [架构与关键设计](docs/demo/ARCHITECTURE.md)：主循环、执行状态、取消、压缩和设计边界。
-3. [运行手册](docs/demo/RUNBOOK.md)：环境、Slurm、恢复命令、产物与排错。
-4. [演示指南](docs/demo/DEMO.md)：几分钟展示工程能力，无需扩大评测集。
-5. [评估说明](docs/demo/EVALUATION.md)：任务定义、验收口径、实际结果和限制。
+1. [代码阅读指南](docs/demo/CODE-READING-GUIDE.zh-CN.md)：按 Agent 模块阅读，对照 learn-claude-code 并了解相对上游的改动。
+2. [教程导航与上游关系](docs/demo/TUTORIALS.md)：两个参考项目怎么读，本项目新增内容在哪里。
+3. [架构与关键设计](docs/demo/ARCHITECTURE.md)：主循环、执行状态、取消、压缩和设计边界。
+4. [运行手册](docs/demo/RUNBOOK.md)：环境、Slurm、恢复命令、产物与排错。
+5. [演示指南](docs/demo/DEMO.md)：几分钟展示工程能力，无需扩大评测集。
+6. [评估说明](docs/demo/EVALUATION.md)：任务定义、验收口径、实际结果和限制。
 
 保留了第一个项目的 [原始 README](README-UPSTREAM.md)、[中文教程](docs/00-introduction.md)、[英文教程](en/docs/00-introduction.md) 和逐章 `steps/`。原始教程涉及 TypeScript 的部分仍属于上游材料，本分支的改造仅在 Python。第二个项目通过 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) 链接阅读，没有复制其完整实现。
 
