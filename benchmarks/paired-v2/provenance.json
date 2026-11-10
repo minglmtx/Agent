@@ -1,0 +1,32 @@
+{
+  "source_base": "30fd7b3528202987c7000f51dd62d7f6b6390b70",
+  "original_gpu_job": 4970017,
+  "original_cpu_check_job": 4969996,
+  "checks_reused": {
+    "invalid_baseline_returned": true,
+    "invalid_baseline_recovered_without_executing_invalid": true,
+    "invalid_baseline_raw_evidence_saved": true,
+    "invalid_modified_returned": true,
+    "invalid_modified_recovered_without_executing_invalid": true,
+    "invalid_modified_raw_evidence_saved": true,
+    "budget_baseline_returned": true,
+    "budget_baseline_exact_ten_tool_rounds": true,
+    "budget_modified_returned": true,
+    "budget_modified_exact_ten_tool_rounds": true
+  },
+  "sha256": {
+    "python/mini_claude/agent.py": "6379f720b9fc65ac502d56c52fd856153a10135f4bfe2af2c2f8fb946fe6caf4",
+    "python/mini_claude/tool_protocol.py": "03ebd25d2c14d7020303eafd1a5ef2d6e1c80209d560e3d4a3278f2a7a607da9",
+    "benchmarks/paired-v2/worker.py": "164f4a104da3d118eb83628fb819550fc4ad873d517cd739328fc8a80c9ffd99",
+    "benchmarks/paired-v2/tool_child.py": "dff19b5555d2932650b8ae25cab2aa086b23fac2964271195f50f1fc6e128282",
+    "benchmarks/paired-v2/isolation.py": "af2d75e553835e399d1c8e8f697bdbb8aeea78748316491c96d6db46d57944db",
+    "benchmarks/paired-v2/evaluate_child.py": "f2c56a7f4bdf9b1286b8a614d6a5371b239f19d14dfdef9e213e4ff88b30bcc3",
+    "benchmarks/paired-v2/benchmark.py": "b2613a38ff27a0fc80d59c33a05c2fa818eb289ed5e11924cf6f69030b0ccc79"
+  },
+  "publication_check": {
+    "job_id": 4978114,
+    "unit_tests": 8,
+    "passed": true,
+    "scope": "Protocol projection tests; runtime hashes match evaluated v2. No new GPU evaluation."
+  }
+}

@@ -2008,8 +2008,12 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
                         self._openai_messages.append({"role": "tool", "tool_call_id": ct["tc"]["id"], "content": res})
 
             self._context_cleared = False
+            from .tool_protocol import repair_invalid_history
+            self._openai_messages = repair_invalid_history(self._openai_messages)
 
     async def _call_openai_stream(self) -> dict:
+        from .tool_protocol import repair_invalid_history
+        self._openai_messages = repair_invalid_history(self._openai_messages)
         await self._prepare_local_context()
         async def _do():
             stream = await self._openai_client.chat.completions.create(
