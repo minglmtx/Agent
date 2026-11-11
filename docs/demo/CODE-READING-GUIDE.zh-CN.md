@@ -1,5 +1,7 @@
 # Coding Agent 代码阅读指南
 
+面试准备可配合阅读[完整技术手册](INTERVIEW-TECHNICAL-GUIDE.zh-CN.md)：按模块解释调用链、进程线程、上下文、Memory、会话恢复及多 Agent 管理维护，附目录、代码链接和问答。
+
 本指南按 Agent 的能力分组，参考 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) 的学习顺序，帮助阅读本项目的 Python 实现。分析基于本仓库提交 `4e0a43f53aa6150d063cd45c6f7224acf80c53c5`；行号和后续代码可能变化。本项目的基础框架来自 [claude-code-from-scratch](https://github.com/Windy3f3f3f3f/claude-code-from-scratch)，上游基线为 `0b452360866433fde0dc77cd37ada9d303546592`。
 
 先读一条完整链路，再读扩展功能和改动。`agent.py` 较长，不必从头逐行阅读。
