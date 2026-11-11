@@ -7,7 +7,7 @@
 - State a concrete deliverable and its necessary checks once. Do not create extra approval, reporting or acceptance stages during routine progress.
 - Perform authorized reversible edits and read-only investigation directly. Ask only for missing information that blocks work or actions outside existing authorization; continue independent work meanwhile.
 - Validate the changed path and affected consumers. Reuse applicable accepted evidence; do not rerun checks solely because the agent, task, batch or directory changed.
-- Expand diagnosis for an actual failure, conflicting evidence, stalled progress or a changed dependency. Each retry needs a new hypothesis, evidence or change; do not repeat unchanged checks.
+- Expand diagnosis for an actual failure, conflicting evidence, stalled progress or a changed dependency. Allow at most two extra analysis rounds per event, then obtain evidence, make a testable change or park that branch. Rewording hypotheses does not reset the limit; new evidence or a substantive change can reopen diagnosis. Stop once required checks pass.
 - When required checks pass, continue to the next authorized stage. Reserve full regression for an explicit delivery requirement or demonstrated broad impact.
 - Batch compatible checks and ready tasks within actual resource limits. While jobs wait, do useful independent work; avoid repeated polling without new information.
 - Preserve original evidence and data-split isolation. Do not replay unknown side effects, exceed authorized cost/resource limits, or overwrite running jobs' frozen inputs.

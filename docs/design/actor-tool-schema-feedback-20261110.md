@@ -1,5 +1,7 @@
 # Actor 工具 schema 与纠错反馈：最小实施交接
 
+阅读范围：本页是按需查询的技术合同及版本记录，不是逐轮执行清单；历史排期不覆盖[当前 goal](../GOAL-PROMPT.zh-CN.md)。检查触发与退出统一按[日常执行规则](../FRAMEWORK_CHECK_WORKFLOW.md#execution-defaults)。
+
 日期：2026-11-10；版本：9。性质：工具与反馈合同；实现、安装和真实运行分别沿原包回执核定。
 
 采用用户选定的最小方案：保留 `thought + action`／`thought + read`，补完整工具说明、参数 schema、动态反馈及连续无效提案停止。复用现有执行器、正文传递、权限和账本。

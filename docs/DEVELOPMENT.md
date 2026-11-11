@@ -21,7 +21,7 @@ CLI 实际入口由安装生成的 `lab-generate-skill` 命令提供；其 `buil
 
 ## 检查
 
-测试、项目 import 和安装全部在 Slurm 内进行。公开快照先用有限入口检查导入与 CLI：
+测试、项目 import 和安装全部在 Slurm 内进行。以下是首次装配或相关入口变化时可选的检查示例，不是每次修改都要执行的清单；已适用的结果复用：
 
 ```bash
 lab-generate-skill --help
