@@ -6,6 +6,7 @@
 
 - [项目代码阅读指南](docs/CODE-READING-GUIDE.zh-CN.md)：模块入口和调用跟踪。
 - [AI 应用技术与面试备考手册](docs/AI-APPLICATION-TECHNICAL-HANDBOOK.zh-CN.md)：20 章实现、取舍、并发与面试准备。
+- [简历项目讲解与面试追问](docs/RESUME-PROJECT-INTERVIEW-GUIDE.zh-CN.md)：按已提交简历逐项讲解，区分实现、验证与设计，附案例和深入问答。
 - [框架模块职责](docs/FRAMEWORK_MODULES.md)与[架构合同](docs/design/codebase-architecture-v1.md)。
 - [安装与检查](docs/DEVELOPMENT.md)：依赖、Slurm 检查及外部资产边界。
 - [发布范围与版本](docs/EXPORT.md)：来源、排除项及验收范围。
