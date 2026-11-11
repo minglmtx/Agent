@@ -1,5 +1,6 @@
 # Project execution rules
 
+- Current priority: integrate all in-scope tasks into the new framework by compatibility group and complete target construction and SFT. First-batch delivery is a milestone, not the finish line. Reuse shared implementations; keep per-task outcomes and train/dev/test separation.
 - Follow the user's current objective, scope and existing authorization; carry necessary work through to the agreed result without repeatedly asking to continue.
 - Read `docs/DEVELOPMENT.md` once for environment constraints. Read module boundaries and architecture contracts only for the code or behavior being changed; do not load all historical documents.
 - Use the current handoff and original result records for runtime facts. Historical examples and this published repository do not grant production permissions.
