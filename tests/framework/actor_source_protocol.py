@@ -1,0 +1,33 @@
+"""Read surface shared by native engineering sources; conveys no run permission."""
+
+from collections.abc import Mapping
+from typing import Any, Protocol
+from lab_generate_skill.domain.evidence import EvidenceRef
+from lab_generate_skill.domain.task import PublicTask, TaskBinding
+from lab_generate_skill.domain.site_task import SiteTaskRequest
+from lab_generate_skill.domain.validation import Contract
+from site_resource_fixtures import Case
+
+
+class ActorNativeSource(Protocol):
+    @property
+    def native_contract_ref(self) -> EvidenceRef: ...
+    @property
+    def public(self) -> PublicTask: ...
+    @property
+    def binding(self) -> TaskBinding: ...
+    @property
+    def binding_ref(self) -> EvidenceRef: ...
+    @property
+    def request(self) -> SiteTaskRequest | None: ...
+    def raw(self, data: bytes, schema: str, /) -> EvidenceRef: ...
+    def put(self, value: Contract, /) -> EvidenceRef: ...
+
+
+class ActorSource(Protocol):
+    @property
+    def native(self) -> ActorNativeSource: ...
+    @property
+    def c(self) -> Case: ...
+    @property
+    def saved(self) -> Mapping[str, Any]: ...

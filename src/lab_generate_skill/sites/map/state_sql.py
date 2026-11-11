@@ -1,0 +1,8 @@
+"""Exact selected capsule public-table write tracking and sequence observation.
+
+Installation is one effectful attempt; never delete guard rows to fake reset.
+"""
+
+INSTALL_SQL = "\nCREATE SCHEMA codex_reset_guard;\nCREATE TABLE codex_reset_guard.changed (table_name text PRIMARY KEY);\nCREATE FUNCTION codex_reset_guard.record_write() RETURNS trigger LANGUAGE plpgsql AS $$\nBEGIN\n INSERT INTO codex_reset_guard.changed VALUES (TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME)\n ON CONFLICT DO NOTHING;\n RETURN NULL;\nEND $$;\nDO $$ DECLARE r record; BEGIN\n FOR r IN SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace\n WHERE n.nspname='public' AND c.relkind IN ('r','p') LOOP\n EXECUTE format('CREATE TRIGGER codex_reset_guard_write AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON public.%I FOR EACH STATEMENT EXECUTE PROCEDURE codex_reset_guard.record_write()', r.relname);\n END LOOP;\nEND $$;\n"
+
+STATE_SQL = "\nSELECT json_build_object(\n 'tables', (SELECT json_agg(relname ORDER BY relname) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p')),\n 'tracked', (SELECT json_agg(c.relname ORDER BY c.relname) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND t.tgname='codex_reset_guard_write' AND t.tgenabled='O'),\n 'changed', (SELECT coalesce(json_agg(table_name ORDER BY table_name),'[]'::json) FROM codex_reset_guard.changed),\n 'sequences', (SELECT coalesce(json_agg(json_build_array(sequencename,last_value) ORDER BY sequencename),'[]'::json) FROM pg_sequences WHERE schemaname='public')\n);\n"

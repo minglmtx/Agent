@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lab-generate-skill"
+version = "0.1.0"
+description = "Go-Browse-WA preparation, BrowserGym inference and initial skill-bank construction"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "jsonschema==4.26.0",
+  "beautifulsoup4==4.15.0",
+  "markdown-it-py==4.2.0",
+  "numpy>=1.26",
+  "pyarrow>=18.0",
+  "pydantic>=2.7",
+  "PyYAML>=6.0",
+  "requests>=2.31",
+  "scikit-learn>=1.4",
+]
+
+[project.optional-dependencies]
+map-pdf = ["PyMuPDF==1.26.5"]
+constraints = ["lm-format-enforcer==0.11.3", "interegular==0.3.3"]
+runtime = [
+  "accelerate>=1.0",
+  "torch>=2.3",
+  "transformers>=4.51",
+]
+sft = ["torch>=2.3", "transformers>=4.51", "accelerate>=1.0", "peft==0.17.1"]
+browser = ["browsergym-core==0.14.3", "psutil>=5.9"]
+webarena = ["browsergym-webarena==0.14.3"]
+openai = ["openai>=1.40", "tiktoken>=0.7"]
+sentence-transformers = ["sentence-transformers>=3.0"]
+test = ["pytest>=8.0"]
+quality = ["black==26.5.1", "mypy==1.15.0", "pytest==9.1.1"]
+
+[project.scripts]
+lab-generate-skill = "lab_generate_skill.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tools"]
+testpaths = ["tests"]
+
+[tool.black]
+target-version = ["py311"]
+line-length = 88
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+files = [
+  "src/lab_generate_skill/domain",
+  "src/lab_generate_skill/policies",
+  "src/lab_generate_skill/ports",
+  "src/lab_generate_skill/adapters",
+  "src/lab_generate_skill/runtime",
+  "src/lab_generate_skill/application",
+  "src/lab_generate_skill/registry",
+  "src/lab_generate_skill/release",
+  "src/lab_generate_skill/generator",
+    "src/lab_generate_skill/actor",
+    "src/lab_generate_skill/teacher",
+  "src/lab_generate_skill/bootstrap",
+    "src/lab_generate_skill/sites",
+  "src/lab_generate_skill/task_families",
+  "src/lab_generate_skill/evaluators",
+  "tests/framework",
+  "tools/check_framework.py",
+  "tools/framework_checks",
+  "tools/read_historical_reference.py",
+]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true

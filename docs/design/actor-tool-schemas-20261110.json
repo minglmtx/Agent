@@ -1,0 +1,1722 @@
+{
+  "schema_version": "actor-tool-schema-catalog/1",
+  "revision": 4,
+  "date": "2026-11-10",
+  "status": "implementation_handoff_not_runtime_acceptance",
+  "description": "MCP-style descriptions and JSON Schemas only; existing action/read wire is retained. This catalog is not an MCP server and grants no tool permissions.",
+  "scope": "20 registered BrowserGym actions + 3 registered same-snapshot reads; filter by actual task allow-list and registered reader before publishing.",
+  "json_schema_dialect": "https://json-schema.org/draft/2020-12/schema",
+  "sources_read": [
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/domain/browser_action_catalog.py",
+      "sha256": "23ba10ddcafddd7cb3d92e7d0a73c25fb996c1c5dd8c07b368bdfa4baa8fd618"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/domain/browser_action_protocol.py",
+      "sha256": "638745bdb95131446f7c514e58a26b458c97404964b0c63395f6db6dd30cb5c2"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/domain/observation_read_choice.py",
+      "sha256": "71aab3e1fd22ec1e611e3dce8c929522bb0efffba065d0f769eff1c6a14c70d0"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/domain/observation_read.py",
+      "sha256": "c88db6c0dac9d3d8902a44a45d12200f6ee529f74f6efecd342a1ed97b18094f"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/domain/observation_read_policy.py",
+      "sha256": "bd25f630d3c29cf2bf169e197b7def339ba3bfd24da393c4f69220766ae8653c"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/actor/decisions.py",
+      "sha256": "c536074206339ab4ae665227fd5c7233399a731e746828f79e24ac9652ae60ea"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/actor/adaptive_layout.py",
+      "sha256": "d58122a5b72ee4026784f1978e8de1125c3c219f23209ce9a2e0d1280ebeafff"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/actor/protocol_examples.py",
+      "sha256": "03edfc4db00a3c9bd9cbf00a608e632be51d72f01a526e0ec6e663ed1e63efd1"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/application/actor_loop.py",
+      "sha256": "5c4cc7326a4a85c0268c5e42553bdc592ceb72a703041ca4506666ce531f6d7b"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/adapters/browsergym/actions.py",
+      "sha256": "94217b63882ea69af2033814c77431ba48875f6de6300106061f110294307529"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/tools/python-releases/lab-skill-20261025-v2/lib/python3.11/site-packages/browsergym/core/action/functions.py",
+      "sha256": "9e6073e150b3a95ceddddf329feb451b760b6706891c43f6c0c426df44ee05a4"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/domain/actor_prompt.py",
+      "sha256": "f39c8443ed64bad1a883595397028859803ce49889904b5770928aca4b571d60"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/adapters/models/causal_transformers.py",
+      "sha256": "7597afc64c9a53af7825c3adbcf4bf1a25d2ec81870b62a838b21532dfedb583"
+    },
+    {
+      "path": "/anvme/workspace/r102bf10-lab-generate-skill/code/lab-generate-skill-capture-admission-v2-candidate-20261109/src/lab_generate_skill/adapters/models/openrouter_request.py",
+      "sha256": "4366ae538a0c91d1394ae6eb1f883abdda8882486e15ea2ae3b135abb0df643f"
+    }
+  ],
+  "example_scope": "All IDs, URLs, file paths and the zero hash are inert syntax fixtures, not production instructions. Rebind to current public facts before model-visible examples.",
+  "materialization": {
+    "mandatory_before_model_or_validation": true,
+    "read_snapshot": "Replace snapshot_sha256 schema with const=current public observation hash, preserving type/pattern.",
+    "read_ranges": "Replace read_region.ranges.maxItems with frozen policy.max_ranges (1..16).",
+    "read_tokens": "Replace all read.output_tokens.maximum with min(61440, policy.body_max_tokens).",
+    "tab_focus": "Set index.maximum to current tab count-1; no empty ready tab set.",
+    "availability": "Only task.allowed_actions and actually registered observation tools; never expose unavailable capabilities.",
+    "response_envelope": "Rebuild read oneOf from the same materialized tool schemas; omit the read branch if no read tools are registered.",
+    "not_schema_checks": [
+      "start < end",
+      "region existence, current snapshot/attempt binding and available captured row/codepoint range",
+      "cursor provenance and identical request parameters; only current-reader input mistake is correctable",
+      "UTF-8/finite numeric values and strict JSON integer representation, no booleans-as-integers or string coercion",
+      "current authority, claim, cancellation, dispatch budget and existing once ledgers",
+      "remaining read quota and continuous invalid-proposal limits from existing trace; no independent ledger"
+    ],
+    "suggested_new_invalid_policy": {
+      "max_consecutive_invalid_proposals": 3,
+      "max_identical_invalid_proposals": 3,
+      "status": "Proposed successor defaults; identical count includes the first rejected proposal. Existing frozen runs and installed policy remain unchanged until new acceptance.",
+      "fingerprint": "current observation reference + branch/tool + canonical original proposal arguments + specific rejection code; exclude thought, generation/request IDs and feedback text; preserve list order and Unicode literals",
+      "reset": "Retain the existing trace-derived consecutive-invalid streak and fingerprint algorithm. A valid dispatched read/action clears the streak and its repeated counts; snapshot change ends same-snapshot repeats. Within one streak and snapshot, the first identical rejection counts as 1, the second remains correctable, and the third stops before the next generation. Permission, unknown and once boundaries are never reset."
+    }
+  },
+  "responseEnvelopeSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "oneOf": [
+      {
+        "type": "object",
+        "properties": {
+          "thought": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "thought": {
+            "type": "string"
+          },
+          "read": {
+            "oneOf": [
+              {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "schema_version": {
+                    "type": "string",
+                    "const": "observation-read-choice/1",
+                    "default": "observation-read-choice/1"
+                  },
+                  "snapshot_sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$",
+                    "description": "Exact observation hash in the current prompt. Bound to const before publication."
+                  },
+                  "output_tokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 61440,
+                    "description": "Maximum read body tokens, including required context. Effective maximum comes from the frozen policy."
+                  },
+                  "continuation": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "Original continuation from the same snapshot and identical request parameters; null starts a new read."
+                  },
+                  "tool": {
+                    "type": "string",
+                    "const": "list_regions"
+                  },
+                  "parent_region_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^ax-line-(0|[1-9][0-9]*)$",
+                        "description": "Copy a region_id from the current region directory/search. Not a browser bid; never construct it from a label."
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                },
+                "required": [
+                  "tool",
+                  "snapshot_sha256",
+                  "output_tokens"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "schema_version": {
+                    "type": "string",
+                    "const": "observation-read-choice/1",
+                    "default": "observation-read-choice/1"
+                  },
+                  "snapshot_sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$",
+                    "description": "Exact observation hash in the current prompt. Bound to const before publication."
+                  },
+                  "output_tokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 61440,
+                    "description": "Maximum read body tokens, including required context. Effective maximum comes from the frozen policy."
+                  },
+                  "continuation": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "Original continuation from the same snapshot and identical request parameters; null starts a new read."
+                  },
+                  "tool": {
+                    "type": "string",
+                    "const": "read_region"
+                  },
+                  "ranges": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 16,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "region_id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256,
+                              "pattern": "^ax-line-(0|[1-9][0-9]*)$",
+                              "description": "Copy a region_id from the current region directory/search. Not a browser bid; never construct it from a label."
+                            },
+                            "unit": {
+                              "const": "whole_region"
+                            },
+                            "start": {
+                              "type": "null",
+                              "default": null
+                            },
+                            "end": {
+                              "type": "null",
+                              "default": null
+                            }
+                          },
+                          "required": [
+                            "region_id",
+                            "unit"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "region_id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256,
+                              "pattern": "^ax-line-(0|[1-9][0-9]*)$",
+                              "description": "Copy a region_id from the current region directory/search. Not a browser bid; never construct it from a label."
+                            },
+                            "unit": {
+                              "enum": [
+                                "data_rows",
+                                "codepoints"
+                              ]
+                            },
+                            "start": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "description": "Zero-based inclusive start; data_rows excludes table header rows."
+                            },
+                            "end": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "description": "Exclusive end. Must exceed start and stay within the captured region."
+                            }
+                          },
+                          "required": [
+                            "region_id",
+                            "unit",
+                            "start",
+                            "end"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "description": "Independent requested ranges. Effective maxItems comes from the frozen read policy, not this absolute ceiling."
+                  }
+                },
+                "required": [
+                  "tool",
+                  "snapshot_sha256",
+                  "output_tokens",
+                  "ranges"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "schema_version": {
+                    "type": "string",
+                    "const": "observation-read-choice/1",
+                    "default": "observation-read-choice/1"
+                  },
+                  "snapshot_sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$",
+                    "description": "Exact observation hash in the current prompt. Bound to const before publication."
+                  },
+                  "output_tokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 61440,
+                    "description": "Maximum read body tokens, including required context. Effective maximum comes from the frozen policy."
+                  },
+                  "continuation": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "Original continuation from the same snapshot and identical request parameters; null starts a new read."
+                  },
+                  "tool": {
+                    "type": "string",
+                    "const": "search_regions"
+                  },
+                  "query": {
+                    "type": "string",
+                    "description": "Nonempty literal substring, not a regular expression.",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "mode": {
+                    "type": "string",
+                    "const": "unicode_casefold_literal/1",
+                    "default": "unicode_casefold_literal/1"
+                  },
+                  "region_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "pattern": "^ax-line-(0|[1-9][0-9]*)$",
+                      "description": "Copy a region_id from the current region directory/search. Not a browser bid; never construct it from a label."
+                    },
+                    "maxItems": 128,
+                    "uniqueItems": true,
+                    "description": "Current region IDs; [] searches this captured snapshot, not unloaded pages."
+                  }
+                },
+                "required": [
+                  "tool",
+                  "snapshot_sha256",
+                  "output_tokens",
+                  "query",
+                  "region_ids"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "required": [
+          "read"
+        ],
+        "additionalProperties": false
+      }
+    ]
+  },
+  "rejectionFeedbackSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "status": {
+        "const": "proposal_rejected"
+      },
+      "executed": {
+        "const": false
+      },
+      "tool": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "code": {
+        "enum": [
+          "INVALID_JSON",
+          "INVALID_RESPONSE_SHAPE",
+          "WRONG_TOOL_BRANCH",
+          "UNKNOWN_TOOL",
+          "INVALID_ARGUMENTS",
+          "RANGE_COUNT_EXCEEDED",
+          "OUTPUT_BUDGET_EXCEEDED",
+          "STALE_SNAPSHOT",
+          "UNKNOWN_REGION",
+          "RANGE_OUT_OF_BOUNDS",
+          "INVALID_CONTINUATION",
+          "READ_QUOTA_EXHAUSTED",
+          "REPEATED_INVALID_PROPOSAL",
+          "INVALID_PROPOSAL_LIMIT"
+        ]
+      },
+      "message": {
+        "type": "string"
+      },
+      "field": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "actual": {},
+      "allowed": {},
+      "next_action": {
+        "type": "string"
+      },
+      "can_correct": {
+        "type": "boolean"
+      },
+      "consecutive_invalid": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "repeated_invalid": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "status",
+      "executed",
+      "tool",
+      "code",
+      "message",
+      "field",
+      "actual",
+      "allowed",
+      "next_action",
+      "can_correct",
+      "consecutive_invalid",
+      "repeated_invalid"
+    ],
+    "additionalProperties": false
+  },
+  "rejectionFeedbackExample": {
+    "status": "proposal_rejected",
+    "executed": false,
+    "tool": "read_region",
+    "code": "RANGE_COUNT_EXCEEDED",
+    "message": "Read was not executed: too many regions.",
+    "field": "ranges",
+    "actual": 5,
+    "allowed": {
+      "minimum": 1,
+      "maximum": 4
+    },
+    "next_action": "Use at most 4 current directory region IDs; do not construct IDs from browser bids.",
+    "can_correct": true,
+    "consecutive_invalid": 1,
+    "repeated_invalid": 1
+  },
+  "tools": [
+    {
+      "name": "click",
+      "description": "Click the observed element once. Check the resulting observation; click is not proof of task success.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          },
+          "button": {
+            "type": "string",
+            "enum": [
+              "left",
+              "middle",
+              "right"
+            ],
+            "default": "left"
+          },
+          "modifiers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Alt",
+                "Control",
+                "ControlOrMeta",
+                "Meta",
+                "Shift"
+              ]
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "bid"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "bid",
+        "button",
+        "modifiers"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "click('42')"
+        }
+      },
+      "example_arguments": {
+        "bid": "42"
+      },
+      "feedback": {
+        "correction_template": "Use a current observed bid, not a region_id. Keyword arguments use =; button and modifiers must match the current enums.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "dblclick",
+      "description": "Double-click the observed element.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          },
+          "button": {
+            "type": "string",
+            "enum": [
+              "left",
+              "middle",
+              "right"
+            ],
+            "default": "left"
+          },
+          "modifiers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Alt",
+                "Control",
+                "ControlOrMeta",
+                "Meta",
+                "Shift"
+              ]
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "bid"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "bid",
+        "button",
+        "modifiers"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "dblclick('42')"
+        }
+      },
+      "example_arguments": {
+        "bid": "42"
+      },
+      "feedback": {
+        "correction_template": "Use one dblclick with a current observed bid. Keyword arguments use =; button and modifiers must match the current enums.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "fill",
+      "description": "Replace an editable field’s contents; an empty value clears it.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string",
+            "description": "Literal text; preserve empty string where the operation permits it."
+          },
+          "enable_autocomplete_menu": {
+            "type": "boolean",
+            "default": false,
+            "description": "Use the native autocomplete typing behavior."
+          }
+        },
+        "required": [
+          "bid",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "bid",
+        "value",
+        "enable_autocomplete_menu"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "fill('42', 'example')"
+        }
+      },
+      "example_arguments": {
+        "bid": "42",
+        "value": "example"
+      },
+      "feedback": {
+        "correction_template": "Use an editable observed bid and a string value; an empty string clears it. enable_autocomplete_menu is a boolean.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "select_option",
+      "description": "Select existing option values or labels in an observed select control; an empty list deselects.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          },
+          "options": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "bid",
+          "options"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "bid",
+        "options"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "select_option('42', ['blue'])"
+        }
+      },
+      "example_arguments": {
+        "bid": "42",
+        "options": [
+          "blue"
+        ]
+      },
+      "feedback": {
+        "correction_template": "Use an observed select bid and an available option string or list of strings; preserve supported empty-list semantics.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "scroll",
+      "description": "Send a wheel event in pixels: positive x/right, positive y/down. Use the new observation afterward; this does not read a saved region.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "delta_x": {
+            "type": "number"
+          },
+          "delta_y": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "delta_x",
+          "delta_y"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "delta_x",
+        "delta_y"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "scroll(0, 400)"
+        }
+      },
+      "example_arguments": {
+        "delta_x": 0,
+        "delta_y": 400
+      },
+      "feedback": {
+        "correction_template": "Provide finite numeric delta_x and delta_y in pixels; right/down are positive. Use the new observation afterward.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "press",
+      "description": "Focus an observed element and press a key or key combination, e.g. Enter or Control+a.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          },
+          "key_comb": {
+            "type": "string",
+            "description": "Native key or modifier+key combination.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "bid",
+          "key_comb"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "bid",
+        "key_comb"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "press('42', 'Enter')"
+        }
+      },
+      "example_arguments": {
+        "bid": "42",
+        "key_comb": "Enter"
+      },
+      "feedback": {
+        "correction_template": "Use a current observed bid and a key_comb string supported by the browser, such as Enter.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "hover",
+      "description": "Move the pointer over an observed element; inspect the next observation for revealed content.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "bid"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "bid"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "hover('42')"
+        }
+      },
+      "example_arguments": {
+        "bid": "42"
+      },
+      "feedback": {
+        "correction_template": "Provide only the current observed bid; use a new observation to establish any revealed content.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "focus",
+      "description": "Focus an observed element without implying task completion.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "bid"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "bid"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "focus('42')"
+        }
+      },
+      "example_arguments": {
+        "bid": "42"
+      },
+      "feedback": {
+        "correction_template": "Provide only the current observed bid.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "clear",
+      "description": "Clear an observed editable field.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "bid"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "bid"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "clear('42')"
+        }
+      },
+      "example_arguments": {
+        "bid": "42"
+      },
+      "feedback": {
+        "correction_template": "Provide only an observed editable bid; this operation clears its content.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "drag_and_drop",
+      "description": "Drag one observed element onto another observed element.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "from_bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          },
+          "to_bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "from_bid",
+          "to_bid"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "from_bid",
+        "to_bid"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "drag_and_drop('42', '43')"
+        }
+      },
+      "example_arguments": {
+        "from_bid": "42",
+        "to_bid": "43"
+      },
+      "feedback": {
+        "correction_template": "Provide distinct argument fields from_bid and to_bid, both bound to current observed elements.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "upload_file",
+      "description": "Open the observed upload control and choose permitted attempt-local files; an empty list clears selection.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "string",
+            "description": "Current observed browser element bid; not a region_id.",
+            "minLength": 1
+          },
+          "file": {
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "A file in this attempt’s allowed local files; no arbitrary filesystem access.",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "A file in this attempt’s allowed local files; no arbitrary filesystem access.",
+                  "minLength": 1
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "bid",
+          "file"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "bid",
+        "file"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "upload_file('42', [])"
+        }
+      },
+      "example_arguments": {
+        "bid": "42",
+        "file": []
+      },
+      "feedback": {
+        "correction_template": "Use the keyword file and only permitted files from this instance; never invent a path. An empty list clears the selection.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "goto",
+      "description": "Navigate to a URL allowed by the current task and network policy.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Observed or otherwise task-authorized URL.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "url"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "goto('https://example.invalid/')"
+        }
+      },
+      "example_arguments": {
+        "url": "https://example.invalid/"
+      },
+      "feedback": {
+        "correction_template": "Provide a URL string allowed for this task.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "go_back",
+      "description": "Navigate back in the current tab’s history.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "argument_order": [],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "go_back()"
+        }
+      },
+      "example_arguments": {},
+      "feedback": {
+        "correction_template": "Call go_back() without arguments.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "go_forward",
+      "description": "Navigate forward in the current tab’s history.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "argument_order": [],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "go_forward()"
+        }
+      },
+      "example_arguments": {},
+      "feedback": {
+        "correction_template": "Call go_forward() without arguments.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "new_tab",
+      "description": "Open a new tab and make it active.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "argument_order": [],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "new_tab()"
+        }
+      },
+      "example_arguments": {},
+      "feedback": {
+        "correction_template": "Call new_tab() without arguments.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "tab_focus",
+      "description": "Activate an existing tab by its zero-based index.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Index in the current observation’s tab list."
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "index"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "tab_focus(0)"
+        }
+      },
+      "example_arguments": {
+        "index": 0
+      },
+      "feedback": {
+        "correction_template": "Use a strict integer index from 0 to the current tab count minus 1.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "tab_close",
+      "description": "Close the current tab.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "argument_order": [],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "tab_close()"
+        }
+      },
+      "example_arguments": {},
+      "feedback": {
+        "correction_template": "Call tab_close() without arguments; it closes the current tab.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "noop",
+      "description": "Wait only for an expected pending page change; do not use this to finish a task.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "wait_ms": {
+            "type": "number",
+            "minimum": 0,
+            "default": 1000,
+            "description": "Milliseconds; must fit the remaining action budget."
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "wait_ms"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "noop()"
+        }
+      },
+      "example_arguments": {},
+      "feedback": {
+        "correction_template": "Use nonnegative finite wait_ms within the original remaining action budget, only for an expected pending change.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "send_msg_to_user",
+      "description": "Finish with an answer supported by observed facts; this call is not the independent business verdict.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Answer or completion message supported by actual observations."
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "text"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "send_msg_to_user('Report only verified observations.')"
+        }
+      },
+      "example_arguments": {
+        "text": "Report only verified observations."
+      },
+      "feedback": {
+        "correction_template": "Provide a text string supported by actual observations; a valid call does not establish business success.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "report_infeasible",
+      "description": "Finish by explaining a verified inability to complete the goal; not merely missing content in a partial view.",
+      "kind": "browser_action",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Observed limitation; do not infer absence from omitted or unloaded content."
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "argument_order": [
+        "reason"
+      ],
+      "wire": {
+        "branch": "action",
+        "encoding": "single_BrowserGym_function_string",
+        "example_response": {
+          "thought": "Format example only; use current task facts and IDs.",
+          "action": "report_infeasible('Describe the verified limitation.')"
+        }
+      },
+      "example_arguments": {
+        "reason": "Describe the verified limitation."
+      },
+      "feedback": {
+        "correction_template": "Provide a reason string describing a verified limitation; omitted content alone does not prove infeasibility.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "list_regions",
+      "description": "List captured structural regions, or direct children of a known region. This is not a browser click and does not discover unloaded pages.",
+      "kind": "observation_read",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "observation-read-choice/1",
+            "default": "observation-read-choice/1"
+          },
+          "snapshot_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Exact observation hash in the current prompt. Bound to const before publication."
+          },
+          "output_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 61440,
+            "description": "Maximum read body tokens, including required context. Effective maximum comes from the frozen policy."
+          },
+          "continuation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Original continuation from the same snapshot and identical request parameters; null starts a new read."
+          },
+          "tool": {
+            "type": "string",
+            "const": "list_regions"
+          },
+          "parent_region_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^ax-line-(0|[1-9][0-9]*)$",
+                "description": "Copy a region_id from the current region directory/search. Not a browser bid; never construct it from a label."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "tool",
+          "snapshot_sha256",
+          "output_tokens"
+        ],
+        "additionalProperties": false
+      },
+      "wire": {
+        "branch": "read",
+        "encoding": "observation-read-choice/1_object",
+        "example_response": {
+          "thought": "Format example only; this read has not been executed.",
+          "read": {
+            "schema_version": "observation-read-choice/1",
+            "tool": "list_regions",
+            "snapshot_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "output_tokens": 1500,
+            "continuation": null,
+            "parent_region_id": null
+          }
+        }
+      },
+      "example_arguments": {
+        "schema_version": "observation-read-choice/1",
+        "tool": "list_regions",
+        "snapshot_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "output_tokens": 1500,
+        "continuation": null,
+        "parent_region_id": null
+      },
+      "feedback": {
+        "correction_template": "Use a read object bound to the current snapshot; parent_region_id must be null or a current directory region ID.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "read_region",
+      "description": "Read captured but unshown content by directory region IDs. Do not reread sufficient displayed content. Does not expand menus, scroll or load pages.",
+      "kind": "observation_read",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "observation-read-choice/1",
+            "default": "observation-read-choice/1"
+          },
+          "snapshot_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Exact observation hash in the current prompt. Bound to const before publication."
+          },
+          "output_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 61440,
+            "description": "Maximum read body tokens, including required context. Effective maximum comes from the frozen policy."
+          },
+          "continuation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Original continuation from the same snapshot and identical request parameters; null starts a new read."
+          },
+          "tool": {
+            "type": "string",
+            "const": "read_region"
+          },
+          "ranges": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "region_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "pattern": "^ax-line-(0|[1-9][0-9]*)$",
+                      "description": "Copy a region_id from the current region directory/search. Not a browser bid; never construct it from a label."
+                    },
+                    "unit": {
+                      "const": "whole_region"
+                    },
+                    "start": {
+                      "type": "null",
+                      "default": null
+                    },
+                    "end": {
+                      "type": "null",
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "region_id",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "region_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "pattern": "^ax-line-(0|[1-9][0-9]*)$",
+                      "description": "Copy a region_id from the current region directory/search. Not a browser bid; never construct it from a label."
+                    },
+                    "unit": {
+                      "enum": [
+                        "data_rows",
+                        "codepoints"
+                      ]
+                    },
+                    "start": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Zero-based inclusive start; data_rows excludes table header rows."
+                    },
+                    "end": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Exclusive end. Must exceed start and stay within the captured region."
+                    }
+                  },
+                  "required": [
+                    "region_id",
+                    "unit",
+                    "start",
+                    "end"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "description": "Independent requested ranges. Effective maxItems comes from the frozen read policy, not this absolute ceiling."
+          }
+        },
+        "required": [
+          "tool",
+          "snapshot_sha256",
+          "output_tokens",
+          "ranges"
+        ],
+        "additionalProperties": false
+      },
+      "wire": {
+        "branch": "read",
+        "encoding": "observation-read-choice/1_object",
+        "example_response": {
+          "thought": "Format example only; this read has not been executed.",
+          "read": {
+            "schema_version": "observation-read-choice/1",
+            "tool": "read_region",
+            "snapshot_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "output_tokens": 1500,
+            "continuation": null,
+            "ranges": [
+              {
+                "region_id": "ax-line-0",
+                "unit": "whole_region"
+              }
+            ]
+          }
+        }
+      },
+      "example_arguments": {
+        "schema_version": "observation-read-choice/1",
+        "tool": "read_region",
+        "snapshot_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "output_tokens": 1500,
+        "continuation": null,
+        "ranges": [
+          {
+            "region_id": "ax-line-0",
+            "unit": "whole_region"
+          }
+        ]
+      },
+      "feedback": {
+        "correction_template": "Use current directory region IDs and the effective range-count, unit and half-open bounds; use a read object, not an action string.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    },
+    {
+      "name": "search_regions",
+      "description": "Search literal Unicode-casefold substrings within captured text; no regex, fuzzy, semantic or website-wide search. Multiple words form one literal phrase. Hits retain their enclosing context/row; inspect coverage and continuation.",
+      "kind": "observation_read",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "observation-read-choice/1",
+            "default": "observation-read-choice/1"
+          },
+          "snapshot_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Exact observation hash in the current prompt. Bound to const before publication."
+          },
+          "output_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 61440,
+            "description": "Maximum read body tokens, including required context. Effective maximum comes from the frozen policy."
+          },
+          "continuation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Original continuation from the same snapshot and identical request parameters; null starts a new read."
+          },
+          "tool": {
+            "type": "string",
+            "const": "search_regions"
+          },
+          "query": {
+            "type": "string",
+            "description": "Nonempty literal substring, not a regular expression.",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "mode": {
+            "type": "string",
+            "const": "unicode_casefold_literal/1",
+            "default": "unicode_casefold_literal/1"
+          },
+          "region_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^ax-line-(0|[1-9][0-9]*)$",
+              "description": "Copy a region_id from the current region directory/search. Not a browser bid; never construct it from a label."
+            },
+            "maxItems": 128,
+            "uniqueItems": true,
+            "description": "Current region IDs; [] searches this captured snapshot, not unloaded pages."
+          }
+        },
+        "required": [
+          "tool",
+          "snapshot_sha256",
+          "output_tokens",
+          "query",
+          "region_ids"
+        ],
+        "additionalProperties": false
+      },
+      "wire": {
+        "branch": "read",
+        "encoding": "observation-read-choice/1_object",
+        "example_response": {
+          "thought": "Format example only; this read has not been executed.",
+          "read": {
+            "schema_version": "observation-read-choice/1",
+            "tool": "search_regions",
+            "snapshot_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "output_tokens": 1500,
+            "continuation": null,
+            "query": "example text",
+            "mode": "unicode_casefold_literal/1",
+            "region_ids": []
+          }
+        }
+      },
+      "example_arguments": {
+        "schema_version": "observation-read-choice/1",
+        "tool": "search_regions",
+        "snapshot_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "output_tokens": 1500,
+        "continuation": null,
+        "query": "example text",
+        "mode": "unicode_casefold_literal/1",
+        "region_ids": []
+      },
+      "feedback": {
+        "correction_template": "Use a nonempty literal query and current region IDs; [] searches only the captured snapshot. Put the tool in a read object.",
+        "example_source": "wire.example_response",
+        "selection": "Use only the clause matching the confirmed error; bind current public values and include the erroneous field in the corrected example. Never execute or silently apply the example."
+      }
+    }
+  ],
+  "prompt_publication": {
+    "single_source": "Keep the complete catalog on the program side. Render compact model-facing definitions from the same schemas; never send this handoff file wholesale.",
+    "fixed_system": "One system message per logical request, built once per enabled-tool/policy/prompt version. Retain names, purpose, argument types, required/default/enum/effective constraints and material effects. Factor shared read fields once. State that colons in signatures denote types; Python action keyword arguments use name=value. Do not include a full example for every tool.",
+    "dynamic_user": "Current snapshot, tabs, public regions and necessary corrective feedback; current-bound format examples appear once here. Omit the routine Current proposal state block and quota/invalid-proposal/no-progress counters. Read reminders start at frozen policy.warn_remaining and persist thereafter: select 3 for this candidate; a larger quota may explicitly select 5, below the total read quota. Do not wait until only 1 read remains. Keep counters internal; show rejection-specific correction and a short notice near the stop limit. The framework enforces exhaustion/stop limits and omits further read examples when exhausted. Keep observations/history bounded; never append previous full requests.",
+    "model_schema_split": "Frozen max_ranges and body_max_tokens may be rendered in the fixed contract. Current snapshot const and tab maximum stay in dynamic facts and program-side per-request validation. Do not print changing snapshots inside the fixed system.",
+    "examples": "Keep one complete enabled browser-action example, preferring click when a suitable public bid exists, plus one concise example per registered and still-available read tool (at most three). On a correctable rejection use one tool/error-specific complete example and replace its ordinary example rather than duplicating it. Full per-tool examples and correction templates remain program-side; bind public values before publication.",
+    "wire_compatibility": "Each independent messages request still carries its fixed system. No new native tools envelope or action format. A session/cache reference is usable only with explicitly implemented and validated backend semantics.",
+    "cache_status": "Read baseline uses one system plus one user and per-call generate(use_cache=True), without cross-request past_key_values. OpenRouter sends messages without explicit cache-control/session support; provider automatic hits are unverified.",
+    "cache_accounting": "Cached prefix tokens remain in the logical context limit. Track full input tokens, actual cache read/write tokens if returned, prefill latency and billed cost separately. Never replay a dispatched/unknown/returned request for cache measurement.",
+    "scope": "Compact contracts and single-prefix reuse first. Do not require a new cache service, stateful API migration or cross-job KV platform for this repair."
+  },
+  "feedback_rendering": {
+    "status": "handoff_templates_not_runtime_implementation",
+    "language": "Render once in the current Actor prompt language; do not duplicate bilingual feedback.",
+    "model_template": "Not executed | {tool_or_reply}.{field}: {reason}; {actual} -> {effective_allowed}.\nCorrection: {matching_correction}.\nFormat example only (not executed; not a target recommendation): {one_complete_response_example}\n{near_stop_notice_if_applicable}",
+    "coverage": "Every enabled catalog tool has a correction template and a complete wire example. Combine the shared error code/field facts with this tool template; do not send the entire catalog.",
+    "binding": "Use only verified current public IDs, ranges, snapshots, tabs, options, URLs, permitted files and observed answer facts. Validate the bound example with the actual parser/validator. If binding is unavailable, label a non-executable format template explicitly instead of inventing values or claiming full validity.",
+    "error_specificity": "The example must include the corrected field, including optional parameters. Type/schema examples are not proof of authority, action appropriateness or business correctness.",
+    "persistence": "Use existing next_action for the short correction and example; preserve the feedback schema, complete original exception and original response. Next-prompt rendering and independent review must use the same versioned deterministic rules.",
+    "deduplication": "Publish one corrective example in the rejection block and suppress its same-branch/tool normal example in this request. Keep older rejection history bounded without accumulating old examples; retain original trace evidence.",
+    "stop_and_execution": "Only confirmed pre-dispatch input errors use executed=false and corrective examples. At the third identical rejection record the terminal reason and do not make a fourth generation for that streak. No continue-reading example after quota exhaustion; no example enabling a forbidden tool. Preserve attempted action outcomes and stop on authority, integrity, cancellation or unknown failures.",
+    "size_target": "Aim for <=350 native tokens per correction block, including the example; this is a drafting target, not a new runtime admission gate. Do not truncate valid JSON, required bounds or observations.",
+    "near_stop_notice": "After the second identical rejection, say: Another identical invalid proposal will stop this run. Omit routine counter dumps.",
+    "unknown_tool": "Use one actually enabled response-envelope example when the submitted tool cannot be identified; do not invent a callable name or silently substitute an operation."
+  }
+}
