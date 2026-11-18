@@ -14,6 +14,33 @@
 - message 2（user）：226,638 字符，约 56,660 tokens
 - 合计 messages 内容：230,987 字符，约 57,747 tokens
 
+## API 请求记录
+
+- 请求文件：`535e71f838d7413887e7fc3d894f74b978a46ebd208a142925f7ec91cdb5d7aa.json`
+- `paid`: `True`
+- `status`: `complete`
+- `model`: `openai/gpt-5.6-terra`
+
+```json
+{
+  "backend": "openai",
+  "model": "openai/gpt-5.6-terra",
+  "temperature": 0.7,
+  "top_p": 0.9,
+  "max_new_tokens": 1024,
+  "max_input_tokens": 28672,
+  "enable_thinking": true,
+  "dtype": "auto",
+  "device_map": "auto",
+  "api_base": "https://openrouter.ai/api/v1",
+  "api_key_env": "OPENROUTER_API_KEY",
+  "reasoning_effort": "medium",
+  "provider_max_price": null,
+  "structured_skill": true,
+  "send_sampling_parameters": false
+}
+```
+
 ## 完整 messages（原始内容）
 
 下面逐字保留传给 API 的 `messages` 内容，包括轨迹、观察、工具反馈、候选 skill 和 Teacher 证据投影。
