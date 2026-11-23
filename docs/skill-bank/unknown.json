@@ -1,0 +1,88 @@
+{
+  "schema_version": "skill-bank-unknowns/1",
+  "source_file": "skill_bank.json",
+  "issue_count": 8,
+  "description": "疑点仅作标记，不在缺少证据时猜测正确路线；相关条目在修订文件中保持原文并保留原顺序。",
+  "issues": [
+    {
+      "skill_id": "candidate_6b033751df84a5f4309d",
+      "domain": "gitlab",
+      "title": "Use Accessibility Bids, Not Visible Text",
+      "principle": "When BrowserGym exposes numeric accessibility bids, target the element’s current bid rather than its visible label. For informational tasks, report the README’s installation instructions directly once the relevant section is observed; only activate a download link if downloading is explicitly required.",
+      "when_to_apply": "Apply on GitLab repository pages when a visible filename or link repeatedly causes “Could not find element” errors, or when the task asks for instructions rather than performing the installation.",
+      "concern": "标题及前半段是 accessibility bid 定位，后半段转为 README 安装说明和下载策略，主题混杂；是否为拼接错误待核，未拆分或改写。",
+      "status": "pending_review",
+      "action_taken": "none; retained verbatim in skill_bank_revised.json"
+    },
+    {
+      "skill_id": "candidate_3a37f5131421c8a5bb58",
+      "domain": "shopping",
+      "title": "Verify Displayed Shipping Address",
+      "principle": "Open the cart and expand “Estimate Shipping and Tax” if needed, then choose “Proceed to Checkout.” On the checkout Shipping step, read the rendered “Shipping Address” block—including name, street, city, region, postal code, and country—rather than attempting to fill static text. Report the displayed address and stop once it matches the requested order.",
+      "when_to_apply": "When verifying an order’s shipping address on a logged-in shopping site, especially after checkout exposes a display-only “Shipping Address” section rather than editable form fields.",
+      "concern": "以当前购物车结账页的 Shipping Address 核对指定订单地址，可能并非目标历史订单的地址。订单上下文与正确读取位置待核，未修改。",
+      "status": "pending_review",
+      "action_taken": "none; retained verbatim in skill_bank_revised.json"
+    },
+    {
+      "skill_id": "candidate_0d3cd1f16021ec80b730",
+      "domain": "shopping",
+      "title": "Verify Shipping Address Through Address Book",
+      "principle": "1. Open the signed-in customer’s “My Account” page and locate “Default Shipping Address.”\n2. Select its “Edit Address” control to inspect all populated fields, including name, phone, street, country, state, city, and postal code.\n3. If the fields are correct, select “Save Address” and confirm the resulting “You saved the address” message and updated Address Book entry.\n4. Report verification only after the confirmation appears.",
+      "when_to_apply": "Use for signed-in shopping accounts when asked to verify a customer’s shipping address and the account exposes “Default Shipping Address,” “Edit Address,” and a save confirmation.",
+      "concern": "when_to_apply 是纯核对地址，principle 却打开 Edit Address 并执行 Save Address；查看与修改/保存边界冲突。应如何拆分或修正需人工确认，未自行改写。",
+      "status": "pending_review",
+      "action_taken": "none; retained verbatim in skill_bank_revised.json"
+    },
+    {
+      "skill_id": "candidate_2cd1a609e70628edf35c",
+      "domain": "shopping",
+      "title": "Read Cart Subtotal",
+      "principle": "Open the shopping cart using the visible “My Cart” control. Read the amount paired with “Cart Subtotal” in the cart preview or cart page, then report that amount as the order’s total cost. Once the amount is confirmed, stop without additional navigation.",
+      "when_to_apply": "When asked for the total cost of an existing order and the shopping page shows a cart control, especially with a nonempty item count. Verify the subtotal label and currency amount before responding.",
+      "concern": "when_to_apply 面向既有订单总额，principle 却从当前购物车的 Cart Subtotal 得出订单总额；购物车小计与历史订单总额不是同一业务对象。正确数据来源待核，未修改。",
+      "status": "pending_review",
+      "action_taken": "none; retained verbatim in skill_bank_revised.json"
+    },
+    {
+      "skill_id": "candidate_ab609207690150f1d174",
+      "domain": "shopping",
+      "title": "Target Cart Link Precisely",
+      "principle": "Use the element’s accessible role and name, not a nearby or stale element ID. Select the link labeled “My Cart” (the cart navigation link), dismissing any active search overlay first. After clicking, verify the URL or page heading changed to the cart page, then read the displayed grand total or order total.",
+      "when_to_apply": "When checking an order total from a product or category page, especially if the search field is focused or accessibility-tree IDs have shifted. Confirm the cart page loaded before extracting a monetary value.",
+      "concern": "通过 My Cart 的 grand total 或 order total 回答订单总额，可能混淆当前购物车与既有订单。正确路线待核，未修改。",
+      "status": "pending_review",
+      "action_taken": "none; retained verbatim in skill_bank_revised.json"
+    },
+    {
+      "skill_id": "candidate_7953299b602c5eb64cf8",
+      "domain": "shopping_admin",
+      "title": "Verify Admin Sections Before Navigating",
+      "principle": "Use visible navigation and page labels to locate the requested admin section rather than guessing a URL from a dashboard tab. After navigation, verify the heading and content match the requested function. If the page shows a 404 or the feature is absent, report that availability depends on permissions or configuration instead of treating an unrelated page as evidence.",
+      "when_to_apply": "When a Magento Admin task requests a dashboard section such as “Now Online,” especially when the current dashboard lacks that section or exposes only similarly named customer tabs.",
+      "concern": "出现 404 或功能缺失时直接归因于 permissions or configuration 可能过度推断；需区分路由不存在与权限/配置不可用，未修改。",
+      "status": "pending_review",
+      "action_taken": "none; retained verbatim in skill_bank_revised.json"
+    },
+    {
+      "skill_id": "candidate_73e9736ecc879d09df24",
+      "domain": "shopping_admin",
+      "title": "Recover Navigation and Print an Invoice",
+      "principle": "1. If repeated menu clicks produce empty-action or missing-element errors, stop reusing stale bids and navigate directly to the admin invoice-list route.\n2. Confirm the page heading is “Invoices” and identify the target row using its order or invoice information.\n3. Select that row’s checkbox, open “Actions,” and choose the available print operation.\n4. Verify the resulting print view or download before reporting completion.",
+      "when_to_apply": "When Magento Admin navigation controls fail or accessibility bids become stale, but the invoice-list route is known or inferable and the page contains the target invoice row and selection controls.",
+      "concern": "invoice-list route “known or inferable”可能允许推断后台 URL，与避免猜测路由的策略存在张力；是否有可观察的已证实来源待核。",
+      "status": "pending_review",
+      "action_taken": "none; retained verbatim in skill_bank_revised.json"
+    },
+    {
+      "skill_id": "candidate_00d6f1e99b4c301607f3",
+      "domain": "shopping_admin",
+      "title": "Use the Verified Sitemap Route",
+      "principle": "In Magento Admin, when the Site Map menu entry is not visible, navigate to the admin sitemap route rather than repeatedly reopening unrelated menus. If the first route shows “404 Error,” remove the dashboard segment and retry the standard sitemap path. Confirm completion by checking the page heading “Site Map” and sitemap table before reporting success.",
+      "when_to_apply": "When asked to open Magento Admin’s Site Map and menu inspection does not expose a matching link, especially after a candidate sitemap URL produces a visible 404 page.",
+      "concern": "404 后“remove the dashboard segment and retry the standard sitemap path”涉及构造或改写 URL；该路线是否有当前观察或已证实依据待核，未修改。",
+      "status": "pending_review",
+      "action_taken": "none; retained verbatim in skill_bank_revised.json"
+    }
+  ]
+}

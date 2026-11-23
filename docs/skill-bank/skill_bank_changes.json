@@ -1,0 +1,279 @@
+{
+  "schema_version": "skill-bank-deinstantiation-changes/1",
+  "source_file": "skill_bank.json",
+  "revised_file": "skill_bank_revised.json",
+  "change_count": 30,
+  "modified_skill_count": 30,
+  "changes": [
+    {
+      "skill_id": "candidate_00925bb5bc57eb1034b2",
+      "domain": "gitlab",
+      "title": "Count Threshold Matches in Listings",
+      "field": "principle",
+      "original": "Scan each visible project list item and read its star-count link, treating the count as the project’s stars. Increment a tally only when the value is strictly greater than the requested threshold, including boundary checks such as exactly 10. Report the final tally after all visible items are evaluated.",
+      "revised": "Scan each visible project list item and read its star-count link, treating the count as the project’s stars. Increment a tally only when the value is strictly greater than the requested threshold; when the value equals the threshold, do not increment. Report the final tally after all visible items are evaluated.",
+      "reason": "删除阈值示例“10”，保留并明确“严格大于、等于不计入”的比较规则。"
+    },
+    {
+      "skill_id": "candidate_5438c001a547c4d15f12",
+      "domain": "gitlab",
+      "title": "Compare Exact To-Do Timestamps",
+      "field": "principle",
+      "original": "Open GitLab’s To-Do List and inspect every visible item’s precise timestamp, not only relative labels such as “2 years ago.” Compare the dates and times chronologically; report the item with the earliest timestamp and include its displayed creation time.",
+      "revised": "Open GitLab’s To-Do List and inspect every visible item’s precise timestamp, not only coarse relative-age labels. Compare the dates and times chronologically; report the item with the earliest timestamp and include its displayed creation time.",
+      "reason": "“2 years ago”只是相对时间的数字示例；改为相对时间类别，保留读取精确时间戳的策略。"
+    },
+    {
+      "skill_id": "candidate_b2cccfea21b60775d307",
+      "domain": "gitlab",
+      "title": "Choose the Profile Link, Not Avatar",
+      "field": "principle",
+      "original": "On GitLab, open the account menu and activate the semantic profile link labeled with the username or handle, such as “Byte Blaze @username.” Do not select the avatar image or its external image URL. Verify navigation by checking that the page URL is the user’s GitLab profile path and the page content identifies the user.",
+      "revised": "On GitLab, open the account menu and activate the semantic profile link labeled with the current user’s display name and username or handle. Do not select the avatar image or its external image URL. Verify navigation by checking that the page URL is the user’s GitLab profile path and the page content identifies the user.",
+      "reason": "移除偶然用户显示名“Byte Blaze”，保留按当前用户显示名和句柄识别个人资料链接的方法。"
+    },
+    {
+      "skill_id": "candidate_118b10cac376079dfacc",
+      "domain": "gitlab",
+      "title": "Open the Actual Issue Result",
+      "field": "principle",
+      "original": "After searching GitLab, distinguish the scope tab (for example, “Issues 2”) from individual result links. Select the result whose accessible name matches the target title, then verify navigation by checking that the URL leaves search and the page heading shows the issue details. If the search page remains visible, continue searching rather than reporting completion.",
+      "revised": "After searching GitLab, distinguish the “Issues” scope tab and its displayed result count from individual result links. Select the result whose accessible name matches the target title, then verify navigation by checking that the URL leaves search and the page heading shows the issue details. If the search page remains visible, continue searching rather than reporting completion.",
+      "reason": "删除搜索结果计数示例“2”，保留 Issues 范围标签、当前计数与结果链接之间的关键区别。"
+    },
+    {
+      "skill_id": "candidate_74559a8854208e6a5587",
+      "domain": "map",
+      "title": "Zoom Map Until Export Unlocks",
+      "field": "principle",
+      "original": "Click the map’s “Zoom In” control repeatedly, checking the map URL or visible zoom state after each click. Stop when the zoom reaches the threshold that enables export (observed here at level 13), then report completion without performing unrelated actions.",
+      "revised": "Click the map’s “Zoom In” control repeatedly, checking the map URL or visible zoom state after each click. Stop when the zoom reaches the threshold that enables export, then report completion without performing unrelated actions.",
+      "reason": "“level 13”明确是当次观察值而非通用解锁常量；删除该值，保留缩放至导出可用即停止的策略。"
+    },
+    {
+      "skill_id": "candidate_602fc66d8df41b1a254a",
+      "domain": "reddit",
+      "title": "Verify Forum Names Before Giving Up",
+      "field": "principle",
+      "original": "When asked to open a specific forum, match the requested name exactly. From the current page, use the “Forums” navigation entry or “Search query” to locate the target forum; do not substitute a similarly themed forum such as “Jokes.” Report infeasibility only after checking the forum directory or search results and finding no matching destination.",
+      "revised": "When asked to open a specific forum, match the requested name exactly. From the current page, use the “Forums” navigation entry or “Search query” to locate the target forum; do not substitute a similarly themed forum. Report infeasibility only after checking the forum directory or search results and finding no matching destination.",
+      "reason": "移除偶然论坛名“Jokes”，保留不得用相似主题论坛替代目标论坛的规则。"
+    },
+    {
+      "skill_id": "candidate_5209e53320e5e3eb317b",
+      "domain": "reddit",
+      "title": "Re-read Page After Navigation",
+      "field": "principle",
+      "original": "After a navigation succeeds, inspect the new accessibility tree before acting again. If the requested forum list is visible, stop clicking the parent “Forums” link and select the target forum entry by its displayed name, such as the “movies” link. Use the current visible element rather than a stale bid.",
+      "revised": "After a navigation succeeds, inspect the new accessibility tree before acting again. If the requested forum list is visible, stop clicking the parent “Forums” link and select the target forum entry by its displayed name. Use the current visible element rather than a stale bid.",
+      "reason": "移除偶然论坛名“movies”，保留按目标显示名选择当前链接及避免旧 bid 的策略。"
+    },
+    {
+      "skill_id": "candidate_11a4c3f9966119778cd1",
+      "domain": "reddit",
+      "title": "Use Valid Actions and Verify Navigation",
+      "field": "when_to_apply",
+      "original": "When starting from an unrelated Reddit page and navigation clicks fail with empty-action or parsing errors, especially before opening a named forum such as relationship_advice.",
+      "revised": "When starting from an unrelated Reddit page and navigation clicks fail with empty-action or parsing errors, especially before opening the requested forum.",
+      "reason": "将具体论坛实例“relationship_advice”改为任务指定论坛，不改变适用场景。"
+    },
+    {
+      "skill_id": "candidate_78b4dde1969307be448c",
+      "domain": "reddit",
+      "title": "Open Forums Before Pagination",
+      "field": "principle",
+      "original": "1. Navigate to the visible “Forums” entry rather than treating the home submissions feed as the forums list.\n2. Inspect the refreshed accessibility tree for the forum-list pagination control, then activate it using its current accessible element reference.\n3. Verify that the URL or displayed forum entries changed to page 2 before stopping.",
+      "revised": "1. Navigate to the visible “Forums” entry rather than treating the home submissions feed as the forums list.\n2. Inspect the refreshed accessibility tree for the forum-list pagination control, then activate it using its current accessible element reference.\n3. Verify that the URL or displayed forum entries changed to the requested page before stopping.",
+      "reason": "将源任务页码“2”参数化为任务指定页码，保留 URL 和条目变化核验。"
+    },
+    {
+      "skill_id": "candidate_0078c00d0d69ee8b9f73",
+      "domain": "reddit",
+      "title": "Validate Navigation Actions and Stop",
+      "field": "principle",
+      "original": "Use the visible link label or role to issue one valid click action, then inspect the resulting URL and page heading. If the target page is already displayed—such as a Wiki page titled “Information and Guides”—treat the task as complete and stop rather than repeating clicks or no-op actions.",
+      "revised": "Use the visible link label or role to issue one valid click action, then inspect the resulting URL and page heading. If the requested Wiki page or other target page is already displayed, treat the task as complete and stop rather than repeating clicks or no-op actions.",
+      "reason": "移除偶然 Wiki 页名“Information and Guides”，保留目标页已显示时直接完成的策略。"
+    },
+    {
+      "skill_id": "candidate_18fe5236ff0c7c386079",
+      "domain": "reddit",
+      "title": "Verify Canonical Pagination State",
+      "field": "principle",
+      "original": "Use the forum list’s own pagination controls rather than guessing URL parameters. Select the link labeled “Página 2” or “Siguiente,” then verify that the resulting URL and pagination state identify page 2 with the requested sort order. Treat matching-looking content alone as insufficient when the page’s canonical link or active state disagrees.",
+      "revised": "Use the forum list’s own pagination controls rather than guessing URL parameters. Select the localized link for the requested page or the next-page link labeled “Siguiente,” then verify that the resulting URL and pagination state identify the requested page with the requested sort order. Treat matching-looking content alone as insufficient when the page’s canonical link or active state disagrees.",
+      "reason": "去除具体页码“2”，保留本地化下一页标签“Siguiente”、排序状态及规范分页状态核验。"
+    },
+    {
+      "skill_id": "candidate_4e26db718dbe0bba037f",
+      "domain": "shopping",
+      "title": "Interpret Star Ratings Correctly",
+      "field": "principle",
+      "original": "When a product page shows star glyphs alongside a percentage, do not equate the number of rendered glyphs with the rating. Determine the filled-star proportion or accessible percentage: for example, 20% corresponds to 1 out of 5 stars. Report the rating value separately from the review count or rating distribution.",
+      "revised": "When a product page shows star glyphs alongside a percentage, do not equate the number of rendered glyphs with the rating. Determine the filled-star proportion or accessible percentage; to convert it to stars, first confirm the rating scale, then calculate stars as percentage ÷ 100 × the scale maximum. Report the rating value separately from the review count or rating distribution.",
+      "reason": "删除“20%＝1/5”数字示例，改为先确认评分满分再按百分比换算的变量规则。"
+    },
+    {
+      "skill_id": "candidate_ff5fdff0ee6016caa973",
+      "domain": "shopping",
+      "title": "Read Product Rating Summary",
+      "field": "principle",
+      "original": "On a product detail page, inspect the rating summary near the product title. Read the displayed percentage or star value and the adjacent review-count link, then report both directly. Convert a five-star percentage to stars only when the scale is clear (for example, 20% equals 1 out of 5).",
+      "revised": "On a product detail page, inspect the rating summary near the product title. Read the displayed percentage or star value and the adjacent review-count link, then report both directly. Convert a percentage to stars only after confirming the rating scale, using stars = percentage ÷ 100 × the scale maximum.",
+      "reason": "删除“20%＝1/5”示例，保留评分与评论数并读及按评分满分换算的规则。"
+    },
+    {
+      "skill_id": "candidate_2c327ccab8a11bc52031",
+      "domain": "shopping",
+      "title": "Verify Pagination Setting After Selection",
+      "field": "principle",
+      "original": "On a product results page, use the labeled “Show” combobox to select the requested page size. After the page reloads, verify the combobox’s selected value and the results summary (for example, “Items 1–24”) or corresponding URL parameter. If the requested size is already selected, report completion without further changes.",
+      "revised": "On a product results page, use the labeled “Show” combobox to select the requested page size. After the page reloads, verify the combobox’s selected value, the current item range in the results summary, and the corresponding URL parameter for consistency with the requested page size. If the requested size is already selected, report completion without further changes.",
+      "reason": "删除“Items 1–24”实例，改为核对当前展示范围、所选每页数量和 URL 参数的一致性。"
+    },
+    {
+      "skill_id": "candidate_85dc5847284b2577cd3f",
+      "domain": "shopping",
+      "title": "Use the Actual Review Link",
+      "field": "principle",
+      "original": "On a search-results page, identify the target product by its visible title, then activate that product’s nearby review-count link (for example, “1 Review”), not the surrounding rating container or product-title identifier. After clicking, verify that the product page or reviews section appears before continuing. If the action errors, re-inspect the current accessibility tree and choose the currently exposed link by role and text instead of repeating the same selector.",
+      "revised": "On a search-results page, identify the target product by its visible title, then activate that product’s nearby link labeled with its current review count, not the surrounding rating container or product-title identifier. After clicking, verify that the product page or reviews section appears before continuing. If the action errors, re-inspect the current accessibility tree and choose the currently exposed link by role and text instead of repeating the same selector.",
+      "reason": "“1 Review”中的评论数是动态实例；改为读取当前评论数链接，保留与评分容器的区别。"
+    },
+    {
+      "skill_id": "candidate_04fc5f005438a2756891",
+      "domain": "shopping",
+      "title": "Use Structured Shopping Filters",
+      "field": "when_to_apply",
+      "original": "When a shopping task combines keywords with a numeric constraint such as “vegan under $20,” especially when basic search returns an enormous, loosely matched result set or offers an “Advanced Search” link.",
+      "revised": "When a shopping task combines a requested product keyword with a numeric constraint such as a task-specified maximum price, especially when basic search returns an enormous, loosely matched result set or offers an “Advanced Search” link.",
+      "reason": "将“vegan”和“$20”改为任务指定商品条件与最高价格，完整保留 Advanced Search 网站策略。"
+    },
+    {
+      "skill_id": "candidate_7f4598b315a3595a7e09",
+      "domain": "shopping",
+      "title": "Use Visible Category Navigation",
+      "field": "principle",
+      "original": "Navigate to a product category through the visible category menu or its link, not an invented URL. Verify the resulting page shows the category heading, product listings, and pagination before selecting page 2. If navigation returns a 404, stop retrying the same address and recover using the store homepage or visible navigation controls.",
+      "revised": "Navigate to a product category through the visible category menu or its link, not an invented URL. Verify the resulting page shows the category heading, product listings, and pagination before selecting the requested page. If navigation returns a 404, stop retrying the same address and recover using the store homepage or visible navigation controls.",
+      "reason": "将具体页码“2”改为任务指定页码，保留分类范围、商品列表及 404 恢复策略。"
+    },
+    {
+      "skill_id": "candidate_fa6d135e043611248eaf",
+      "domain": "shopping",
+      "title": "Check All Product Pages Before Concluding",
+      "field": "principle",
+      "original": "When a requested product is absent from the current listing, inspect the full visible list and follow available pagination controls, such as “Page Next” or “Page 2.” Compare each product title with the exact requested item. Only report that it could not be found after the available listing pages are checked; do not add a merely similar product.",
+      "revised": "When a requested product is absent from the current listing, inspect the full visible list and follow available pagination controls, such as “Page Next” or a numbered page control. Compare each product title with the exact requested item. Only report that it could not be found after the available listing pages are checked; do not add a merely similar product.",
+      "reason": "删除分页示例中的固定页码“2”，保留 Page Next 控件和遍历所有可用结果页的规则。"
+    },
+    {
+      "skill_id": "candidate_14b5c1ba86c8fedb8600",
+      "domain": "shopping",
+      "title": "Use Pagination Deliberately",
+      "field": "when_to_apply",
+      "original": "Apply when a catalog shows multiple pages or an item range such as “1 to N of M total,” especially after a click reports a timeout but the subsequent accessibility tree reflects a changed page.",
+      "revised": "Apply when a catalog shows multiple pages or an item-range summary showing the current start, end, and total, especially after a click reports a timeout but the subsequent accessibility tree reflects a changed page.",
+      "reason": "将带起始数字的结果范围示例改为当前起止位置与总数的变量关系，保留分页超时后的状态核验。"
+    },
+    {
+      "skill_id": "candidate_98218ab8c854a77f09fa",
+      "domain": "shopping",
+      "title": "Read the Explicit Result Total",
+      "field": "principle",
+      "original": "On a product search results page, use the explicit result summary such as “1–N of TOTAL” as the authoritative count. Do not multiply the visible page size by the number of pagination links, because only a subset of page links may be shown. Report TOTAL after confirming it belongs to the requested search or filter.",
+      "revised": "On a product search results page, use the explicit result-range summary as the authoritative count. Do not multiply the visible page size by the number of pagination links, because only a subset of page links may be shown. Report the displayed total after confirming it belongs to the requested search or filter.",
+      "reason": "删除范围格式中的数字示例，保留“总结果数不等于当页条目数或页链接数”的关键规则。"
+    },
+    {
+      "skill_id": "candidate_fdeadb0f58a278e49767",
+      "domain": "shopping",
+      "title": "Use Accessibility Bids Reliably",
+      "field": "principle",
+      "original": "When an accessibility tree shows an element with a numeric bid, invoke browser actions using that bid rather than copying its displayed name, icon, or escaped Unicode label. After the category navigation succeeds, inspect the refreshed page and select the category-specific “Page 2” control.",
+      "revised": "When an accessibility tree shows an element with a numeric bid, invoke browser actions using that bid rather than copying its displayed name, icon, or escaped Unicode label. After the category navigation succeeds, inspect the refreshed page and select the category-specific control for the requested page.",
+      "reason": "将固定页码“2”改为任务指定页码，保留分类内分页和刷新后检查页面的策略。"
+    },
+    {
+      "skill_id": "candidate_58e3b79f852cc3b0bbce",
+      "domain": "shopping",
+      "title": "Use Review Pagination Efficiently",
+      "field": "principle",
+      "original": "After opening the product’s Reviews section, read the visible review entries and inspect pagination controls. Select “Page 2” or “Page Next” when additional reviews exist instead of repeatedly scrolling. After each action, verify that the review content or page indicator changes; once the requested reviews are visible, report completion and stop.",
+      "revised": "After opening the product’s Reviews section, read the visible review entries and inspect pagination controls. Select the control for the requested page or “Page Next” when additional reviews exist instead of repeatedly scrolling. After each action, verify that the review content or page indicator changes; once the requested reviews are visible, report completion and stop.",
+      "reason": "将具体页码“2”参数化，保留评论分页、Page Next 及每次操作后核验内容变化的策略。"
+    },
+    {
+      "skill_id": "candidate_ad540f13bf4990faf31e",
+      "domain": "shopping",
+      "title": "Search Before Declaring a Product Missing",
+      "field": "principle",
+      "original": "Use the store’s Search field with the exact product name first. If search is unavailable or returns no match, inspect every available pagination link, such as “Page 2” or “Page Next,” before concluding the product is absent. Only report unavailability after exhausting the listed results and confirming no matching product details or rating.",
+      "revised": "Use the store’s Search field with the exact product name first. If search is unavailable or returns no match, inspect every available pagination link, such as a numbered page link or “Page Next,” before concluding the product is absent. Only report unavailability after exhausting the listed results and confirming no matching product details or rating.",
+      "reason": "移除固定页码示例“2”，保留搜索优先和穷尽分页后再报告商品缺失的策略。"
+    },
+    {
+      "skill_id": "candidate_64173a96d3e67f77e747",
+      "domain": "shopping",
+      "title": "Verify Pagination Before Completion",
+      "field": "principle",
+      "original": "1. Open the requested product category from the site navigation.\n2. Locate pagination by its semantic labels, such as “Page 2” or “Page Next,” rather than relying on fixed element identifiers.\n3. Select the requested page, then verify the URL, active-page indicator, and item range confirm the destination.\n4. Once confirmed, report completion and stop.",
+      "revised": "1. Open the requested product category from the site navigation.\n2. Locate pagination by its semantic labels, such as the label for the requested page or “Page Next,” rather than relying on fixed element identifiers.\n3. Select the requested page, then verify the URL, active-page indicator, and item range confirm the destination.\n4. Once confirmed, report completion and stop.",
+      "reason": "将固定页码“2”改为任务指定页码标签，保留语义定位及 URL、当前页和条目范围核验。"
+    },
+    {
+      "skill_id": "candidate_1e57556cca141775d307",
+      "domain": "shopping",
+      "title": "Verify Saved Address and Stop",
+      "field": "when_to_apply",
+      "original": "When editing a shopping-account billing address and the save action returns to the address book or displays a success alert.",
+      "revised": "When the task asks to edit a shopping-account billing address and the save action returns to the address book or displays a success alert.",
+      "reason": "明确只有任务请求编辑账单地址时才适用该保存后核验策略，避免纯查询检索误用。"
+    },
+    {
+      "skill_id": "candidate_4908e139fccf319dfcfb",
+      "domain": "shopping",
+      "title": "Edit and Verify Saved Address",
+      "field": "when_to_apply",
+      "original": "Use when updating a signed-in shopper’s saved billing or shipping address, especially when the Address Book initially shows only summarized address text rather than editable fields.",
+      "revised": "Use when the task asks to update a signed-in shopper’s saved billing or shipping address, especially when the Address Book initially shows only summarized address text rather than editable fields.",
+      "reason": "明确地址编辑和保存必须由任务请求触发，保留 Street Address 等业务字段及核对方法。"
+    },
+    {
+      "skill_id": "candidate_1276a30e79e828a7e4b1",
+      "domain": "shopping",
+      "title": "Update Address Country and Region",
+      "field": "when_to_apply",
+      "original": "When changing a customer’s address country in a shopping account, especially when country selection dynamically replaces the region options or makes the region field required.",
+      "revised": "When the task asks to change a customer’s address country in a shopping account, especially when country selection dynamically replaces the region options or makes the region field required.",
+      "reason": "明确修改国家和地区需由任务请求，保留动态地区选项与保存后核验策略。"
+    },
+    {
+      "skill_id": "candidate_44bad38ed396ebf4c7b4",
+      "domain": "shopping",
+      "title": "Verify and Stop After Saving",
+      "field": "when_to_apply",
+      "original": "Use for account address-country updates when the address editor or address book is visible, especially when the target country may already be selected. Requires an authenticated account and a recognizable save confirmation.",
+      "revised": "Use when the task asks to update an account address’s country and the address editor or address book is visible, especially when the target country may already be selected. Requires an authenticated account and a recognizable save confirmation.",
+      "reason": "将泛指的地址更新场景收紧为任务明确请求更新，避免纯地址查询触发保存。"
+    },
+    {
+      "skill_id": "candidate_dd4af0efb3dc0bbc19d4",
+      "domain": "shopping_admin",
+      "title": "Verify Shared Address Updates Before Editing",
+      "field": "when_to_apply",
+      "original": "When changing a customer phone number in Magento and billing and shipping addresses may be linked or shared. Apply after saving the first address, using the displayed phone values as the completion check.",
+      "revised": "When the task asks to change a customer phone number in Magento and billing and shipping addresses may be linked or shared. Apply after saving the first address, using the displayed phone values as the completion check.",
+      "reason": "明确修改并保存客户地址必须来自任务请求，保留账单与送货地址联动核验策略。"
+    },
+    {
+      "skill_id": "candidate_a902168d1a2c44f542a8",
+      "domain": "shopping_admin",
+      "title": "Save and Verify Customer Group Changes",
+      "field": "when_to_apply",
+      "original": "When changes are pending on a Magento Admin customer group edit form and the save control is visible. Use the success notification as the completion prerequisite before taking no further actions.",
+      "revised": "When the task asks to save changes on a Magento Admin customer group edit form and the save control is visible. Use the success notification as the completion prerequisite before taking no further actions.",
+      "reason": "原文仅以“有待保存更改”为触发条件；补充任务明确请求保存，避免见到表单即产生副作用。"
+    }
+  ]
+}
